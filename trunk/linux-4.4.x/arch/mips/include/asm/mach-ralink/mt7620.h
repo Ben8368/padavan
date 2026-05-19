@@ -131,6 +131,9 @@
 #define MT7620_GPIO_MODE_EPHY		15
 #define MT7620_GPIO_MODE_PA		20
 
+/* WLAN IRQ */
+#define SURFBOARDINT_WLAN		(MIPS_CPU_IRQ_BASE + 6)
+
 static inline int mt7620_get_eco(void)
 {
 	return rt_sysc_r32(SYSC_REG_CHIP_REV) & CHIP_REV_ECO_MASK;

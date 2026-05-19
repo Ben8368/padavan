@@ -18,6 +18,11 @@ choice
 	config FIRST_IF_NONE
 	bool "None"
 
+	config FIRST_IF_MT7620
+	bool "MT7620"
+	select WIFI_MT_MAC
+	select MT_MAC
+
 	config FIRST_IF_MT7615E
 	bool "MT7615E"
 	select WIFI_MT_MAC
@@ -64,9 +69,14 @@ choice
 
 endchoice
 
+config RT_FIRST_IF_MT7620
+	bool
+	default y if FIRST_IF_MT7620
+
 config RT_FIRST_CARD
 	int
 	depends on !FIRST_IF_NONE
+	default 7620 if FIRST_IF_MT7620
 	default 7615 if FIRST_IF_MT7615E
 	default 7622 if FIRST_IF_MT7622
 	default 7622 if FIRST_IF_MT7626
@@ -153,6 +163,12 @@ choice
 	select MT_AP_SUPPORT
 	select MT_STA_SUPPORT
 endchoice
+endmenu
+endif
+
+if (FIRST_IF_MT7620)
+menu "MediaTek MT7620 Wireless driver"
+source "drivers/net/wireless/mediatek/mt76x2/Kconfig"
 endmenu
 endif
 
