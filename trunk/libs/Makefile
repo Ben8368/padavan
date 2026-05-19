@@ -27,7 +27,6 @@ dir_y						+= libssl
 dir_y						+= libjson-c
 dir_y						+= libnfnetlink
 dir_y						+= libmnl
-dir_y						+= libpcap
 dir_y						+= libpcre
 dir_y						+= libevent
 dir_y						+= libcurl

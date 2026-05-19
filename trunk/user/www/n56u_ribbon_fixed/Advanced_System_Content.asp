@@ -388,14 +388,6 @@ function openLink(s) {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th><#PASS_LANG#></th>
-                                            <td>
-                                                <select name="select_lang" id="select_lang" onchange="submit_language();">
-                                                    <% shown_language_option(); %>
-                                                </select>
-                                            </td>
-                                        </tr>
-                                        <tr>
                                             <th><#Adm_System_help#></th>
                                             <td>
                                                 <div class="main_itoggle">

@@ -46,8 +46,6 @@ dir_y						+= wpa_supplicant
 dir_y						+= pppd
 dir_y						+= pppoe
 dir_y						+= scripts
-dir_y						+= tcpdump
-dir_y						+= iperf3
 dir_y						+= libdisk
 dir_y						+= util-linux
 

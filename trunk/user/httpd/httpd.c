@@ -821,7 +821,7 @@ set_preferred_lang(char *cur)
 		if (f_exists(lang_file))
 			nvram_set("preferred_lang", p_lang);
 		else
-			nvram_set("preferred_lang", "EN");
+			nvram_set("preferred_lang", "CN");
 		
 		return 1;
 	}
