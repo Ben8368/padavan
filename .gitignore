@@ -1,0 +1,42 @@
+# Build outputs
+*.o
+*.o.cmd
+*.a
+*.a.cmd
+*.la
+*.lo
+*.dep
+*.deps
+*.orig
+*.rej
+*.pc
+.libs
+.depend
+.dirstamp
+.config
+autom4te.cache
+config.h.in~
+config.log
+config.status
+config_done
+stamp-h1
+
+# Build directories
+/romfs
+/romfs/*
+/images
+/images/*
+/stage
+/stage/*
+
+# Toolchain build artifacts
+toolchain-mipsel/toolchain-*.tar.*
+toolchain-mipsel/build/
+toolchain-mipsel/targets/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
