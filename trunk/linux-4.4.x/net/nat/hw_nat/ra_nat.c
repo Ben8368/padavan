@@ -3479,8 +3479,11 @@ defined(CONFIG_RA_HW_NAT_IPV6)
 #endif				/* CONFIG_RALINK_MT7621 // */
 #endif				/* CONFIG_HNAT_V2 // */
 
+#if defined(CONFIG_RALINK_MT7621) || defined(CONFIG_MACH_MT7623) || \
+	defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 		/* PPE Packet with TTL=0 */
 		reg_modify_bits(PPE_GLO_CFG, DFL_TTL0_DRP, 4, 1);
+#endif
 
 	} else {
 #if defined(CONFIG_RALINK_MT7620)
