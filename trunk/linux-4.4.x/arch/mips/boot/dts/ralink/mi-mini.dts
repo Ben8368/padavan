@@ -57,6 +57,10 @@
 		};
 	};
 
+	usbphy {
+		status = "okay";
+	};
+
 	ehci@101c0000 {
 		status = "okay";
 	};

@@ -69,6 +69,13 @@
 		};
 	};
 
+	usbphy: usbphy {
+		compatible = "mediatek,mt7620-usbphy";
+		resets = <&sysc 22>, <&sysc 25>;
+		reset-names = "host", "device";
+		status = "disabled";
+	};
+
 	ehci@101c0000 {
 		compatible = "generic-ehci";
 		reg = <0x101c0000 0x1000>;
