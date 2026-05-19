@@ -1,16 +1,21 @@
 # padavan-4.4
 
-基于原版 RT-N56U 的第三方路由器固件项目，使用 MTK 官方 Linux 4.4.198 内核（源自 D-LINK GPL 代码）。
+基于 hanwckf/padavan-4.4 精简而来的路由器固件项目，目标设备为小米路由器迷你 (MI-MINI)。
+
+使用 Linux 4.4.198 内核，从 rt-n56u 移植 MT7620 平台支持。
+
+## 目标设备
+
+| 设备 | SoC | WiFi | 备注 |
+|------|-----|------|------|
+| MI-MINI (小米路由器迷你) | MT7620 | 2.4G (内置) + 5G (MT7612E) | 唯一目标设备 |
 
 ## 特性
 
-- Linux 4.4.198 内核 (MIPS32r2, mipsel)
-- 支持 MT7621 SoC 平台
-- 支持 MT7615D/N、MT7915D 无线芯片 (Wi-Fi 5/6)
-- 硬件 NAT (HNAT) + 软件快速转发 (SFE) 双加速
-- IPv6 NAT (基于 netfilter)
-- WireGuard 内核集成
-- Fullcone NAT (by Chion82)
+- Linux 4.4.198 内核 (MIPS32r2, mipsel, MT7620)
+- 精简用户态，仅保留核心路由功能
+- IPv6 支持
+- Fullcone NAT
 - LED & GPIO 控制 (sysfs)
 
 ## 项目结构
@@ -20,47 +25,35 @@ padavan-4.4/
 ├── toolchain-mipsel/        # 交叉编译工具链 (crosstool-ng)
 ├── trunk/
 │   ├── linux-4.4.x/         # Linux 内核源码
-│   ├── libs/                # 第三方库 (openssl, libcurl, mbedtls 等)
-│   ├── user/                # 用户态程序 (70+ 组件)
+│   ├── libs/                # 精简第三方库
+│   ├── user/                # 精简用户态程序
 │   │   ├── rc/              #   init/服务管理器
 │   │   ├── httpd/           #   Web 管理后台
 │   │   ├── dnsmasq/         #   DNS/DHCP
 │   │   ├── iptables/        #   防火墙
-│   │   ├── openvpn/         #   OpenVPN
-│   │   ├── wireguard-tools/ #   WireGuard
-│   │   ├── shadowsocks/     #   SS/SSR
-│   │   ├── trojan/          #   Trojan
-│   │   ├── samba36/         #   文件共享
-│   │   ├── transmission/    #   BT 下载
-│   │   ├── www/             #   Web UI 前端 (~110 个页面)
+│   │   ├── pppd/pppoe/      #   拨号
+│   │   ├── wpa_supplicant/  #   WiFi
+│   │   ├── www/             #   Web UI
 │   │   └── ...
 │   ├── configs/
-│   │   ├── boards/          # 设备硬件定义 (board.h / board.mk)
-│   │   └── templates/       # 编译模板 (.config)
+│   │   ├── boards/          # 设备硬件定义
+│   │   └── templates/       # 编译模板
 │   ├── vendors/Ralink/      # 平台配置
 │   ├── build_firmware_modify # 主编译脚本
 │   └── Makefile             # 顶层构建
 ```
 
-## 支持设备
+## 精简说明
 
-| 设备 | 品牌 | 备注 |
-|------|------|------|
-| K2P / K2P-USB | 斐讯 | 经典机型 |
-| CR660x | 小米 | |
-| DIR-878 / DIR-882 | D-Link | |
-| JCG-Q20 / JCG-AC860M / JCG-836PRO / JCG-Y2 | 捷稀 | |
-| MI-R3P | 小米 | |
-| NETGEAR-BZV | Netgear | |
-| MR2600 | 摩托罗拉 | |
-| XY-C1 | | |
-
-## VPN / 代理组件
-
-- **VPN**: OpenVPN, WireGuard, StrongSwan (IPsec), SoftEther VPN
-- **代理**: Shadowsocks/SSR, Trojan, xTun, Redsocks, ipt2socks
-- **内网穿透**: frp
-- **校园网认证**: dogcom, minieap, njit-client, scutclient, mentohust
+相比上游 padavan-4.4，移除了：
+- 所有非 MI-MINI 设备支持
+- VPN/代理组件 (OpenVPN, WireGuard, Shadowsocks, Trojan 等)
+- SSH (dropbear, openssh)
+- 文件共享 (Samba, vsftpd, NFS)
+- 媒体服务 (minidlna, firefly, xupnpd)
+- BT 下载 (transmission, aria2)
+- 校园网认证 (dogcom, minieap, scutclient 等)
+- 其他非核心组件
 
 ## 编译步骤
 
@@ -72,17 +65,6 @@ sudo apt install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
     fakeroot kmod cpio git python3-docutils gettext automake autopoint \
     texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
     libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
-
-# Archlinux/Manjaro
-sudo pacman -Syu --needed git base-devel cmake gperf ncurses libmpc \
-        gmp python-docutils vim rpcsvc-proto fakeroot cpio help2man
-
-# Alpine
-sudo apk add make gcc g++ cpio curl wget nano xxd kmod \
-    pkgconfig rpcgen fakeroot ncurses bash patch \
-    bsd-compat-headers python2 python3 zlib-dev \
-    automake gettext gettext-dev autoconf bison \
-    flex coreutils cmake git libtool gawk sudo
 ```
 
 ### 2. 克隆源码
@@ -95,32 +77,12 @@ git clone https://github.com/Ben8368/padavan.git
 
 ```sh
 cd padavan/toolchain-mipsel
-
-# (推荐) 下载预编译工具链 (x86_64 或 aarch64)
 ./dl_toolchain.sh
-
-# 或使用 crosstool-ng 自行编译
-# ./build_toolchain
 ```
 
 ### 4. 编译固件
 
 ```sh
 cd padavan/trunk
-
-# (可选) 修改模板配置
-# nano configs/templates/K2P.config
-
-# 开始编译
-fakeroot ./build_firmware_modify K2P
-
-# 编译其他设备前先清理
-./clear_tree
+fakeroot ./build_firmware_modify MI-MINI
 ```
-
-## 参考资料
-
-- 控制 GPIO 和 LED (sysfs)
-- 使用 NAND RWFS 分区
-- 使用 IPv6 NAT 和 Fullcone NAT
-- 通过设备树添加新设备支持
