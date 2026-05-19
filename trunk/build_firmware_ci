@@ -14,7 +14,10 @@ while true ;do
 		if [ -f ./images/*.trx ]; then
 			tail -20 build.log && exit 0
 		else
-			tail -60 build.log && exit 1
+			echo "=== BUILD ERRORS ==="
+			grep -n -E "error:|Error|FAILED" build.log | tail -30
+			echo "=== LAST 80 LINES ==="
+			tail -80 build.log && exit 1
 		fi
 	else
 		echo "$(tail -2 build.log)"
