@@ -1,0 +1,121 @@
+/dts-v1/;
+
+/include/ "mt7620a.dtsi"
+
+/ {
+	compatible = "xiaomi,mi-mini", "ralink,mtk7620a-soc";
+	model = "Xiaomi Mi Mini Wireless Router";
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x8000000>;
+	};
+
+	chosen {
+		bootargs = "console=ttyS0,57600";
+	};
+
+	palmbus@10000000 {
+		spi@b00 {
+			status = "okay";
+
+			flash@0 {
+				compatible = "jedec,spi-nor";
+				reg = <0>;
+				spi-max-frequency = <10000000>;
+
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				partition@0 {
+					label = "Bootloader";
+					reg = <0x0 0x40000>;
+					read-only;
+				};
+
+				partition@40000 {
+					label = "Config";
+					reg = <0x40000 0x10000>;
+				};
+
+				partition@50000 {
+					label = "Factory";
+					reg = <0x50000 0x10000>;
+					read-only;
+				};
+
+				partition@60000 {
+					label = "Storage";
+					reg = <0x60000 0x40000>;
+				};
+
+				partition@a0000 {
+					label = "firmware";
+					reg = <0xa0000 0xf60000>;
+				};
+			};
+		};
+	};
+
+	ehci@101c0000 {
+		status = "okay";
+	};
+
+	ohci@101c1000 {
+		status = "okay";
+	};
+
+	gpio-keys-polled {
+		compatible = "gpio-keys-polled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		poll-interval = <20>;
+
+		reset {
+			label = "reset";
+			gpios = <&gpio0 30 1>;
+			linux,code = <0x198>;
+		};
+	};
+
+	gpio-leds {
+		compatible = "gpio-leds";
+
+		power {
+			label = "mi-mini:blue:power";
+			gpios = <&gpio0 24 1>;
+			default-state = "on";
+		};
+
+		lan {
+			label = "mi-mini:red:lan";
+			gpios = <&gpio0 29 1>;
+			default-state = "off";
+		};
+
+		usb {
+			label = "mi-mini:yellow:usb";
+			gpios = <&gpio0 26 1>;
+			default-state = "off";
+		};
+	};
+
+	gpio_export {
+		compatible = "gpio-export";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		usb_power {
+			gpio-export,name = "usb_power";
+			gpio-export,output = <1>;
+			gpios = <&gpio0 65 0>;
+		};
+	};
+
+	raeth@10100000 {
+		status = "okay";
+		gmac1_txq_num = <1>;
+		gmac1_txq_txd_num = <512>;
+		num_rx_desc = <512>;
+	};
+};

@@ -54,5 +54,68 @@
 
 			reg-shift = <2>;
 		};
+
+		spi@b00 {
+			compatible = "ralink,mt7620a-spi", "ralink,rt2880-spi";
+			reg = <0xb00 0x100>;
+
+			resets = <&sysc 18>;
+			reset-names = "spi";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			status = "disabled";
+		};
+	};
+
+	ehci@101c0000 {
+		compatible = "generic-ehci";
+		reg = <0x101c0000 0x1000>;
+
+		interrupt-parent = <&intc>;
+		interrupts = <18>;
+
+		status = "disabled";
+	};
+
+	ohci@101c1000 {
+		compatible = "generic-ohci";
+		reg = <0x101c1000 0x1000>;
+
+		interrupt-parent = <&intc>;
+		interrupts = <18>;
+
+		status = "disabled";
+	};
+
+	ethsys: ethsys@10000000 {
+		compatible = "mediatek,mt7620-ethsys", "syscon";
+		reg = <0x10000000 0x1000>;
+	};
+
+	raeth: raeth@10100000 {
+		compatible = "ralink,mt7620-eth";
+		reg = <0x10100000 0x10000>;
+
+		interrupt-parent = <&intc>;
+		interrupts = <3>, <6>;
+
+		mediatek,ethsys = <&ethsys>;
+
+		status = "disabled";
+	};
+
+	pcie@10140000 {
+		compatible = "mediatek,mt7620-pcie";
+		reg = <0x10140000 0x10000>;
+
+		interrupt-parent = <&intc>;
+		interrupts = <4>;
+
+		resets = <&sysc 26>;
+		reset-names = "pcie";
+
+		status = "disabled";
 	};
 };

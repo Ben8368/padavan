@@ -103,7 +103,7 @@ extern void __iomem *ethdma_frame_engine_base;
 #define ETHDMASYS_SYSCTL_BASE            ETHDMASYS_BASE
 #define ETHDMASYS_PPE_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x0C00)
 #define ETHDMASYS_ETH_MAC_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x10000)
-#if defined(CONFIG_MACH_MT7623) || defined(CONFIG_SOC_MT7621)
+#if defined(CONFIG_MACH_MT7623) || defined(CONFIG_SOC_MT7621) || defined(CONFIG_SOC_MT7620)
 #define ETHDMASYS_ETH_SW_BASE       (ETHDMASYS_FRAME_ENGINE_BASE + 0x10000)
 #else
 #define ETHDMASYS_ETH_SW_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x18000)
@@ -1228,6 +1228,8 @@ struct QDMA_txdesc {
 #define PROCREG_DIR             "mt7622"
 #elif defined(CONFIG_SOC_MT7621)
 #define PROCREG_DIR             "mt7621"
+#elif defined(CONFIG_SOC_MT7620)
+#define PROCREG_DIR             "mt7620"
 #endif
 
 #define PROCREG_SKBFREE		"skb_free"

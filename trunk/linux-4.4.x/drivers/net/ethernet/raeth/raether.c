@@ -71,13 +71,25 @@ static const char *const mtk_clks_source_name[] = {
 static void fe_reset(void)
 {
 	u32 val = 0;
+	u32 fe_rst_bit = RALINK_FE_RST;
+	u32 ppe_rst_bit = RALINK_PPE_RST;
+
+#if defined(CONFIG_SOC_MT7620)
+	if (dev_raether) {
+		struct END_DEVICE *ei_local = netdev_priv(dev_raether);
+		if (ei_local->chip_name == MT7620_FE) {
+			fe_rst_bit = (1 << 21);
+			ppe_rst_bit = 0;
+		}
+	}
+#endif
 
 	val = sys_reg_read(RSTCTRL);
-	val = val | RALINK_FE_RST | RALINK_PPE_RST;
+	val = val | fe_rst_bit | ppe_rst_bit;
 	sys_reg_write(RSTCTRL, val);
 	udelay(10);
 
-	val = val & ~(RALINK_FE_RST | RALINK_PPE_RST);
+	val = val & ~(fe_rst_bit | ppe_rst_bit);
 	sys_reg_write(RSTCTRL, val);
 	udelay(1000);
 }
@@ -85,13 +97,22 @@ static void fe_reset(void)
 static void fe_gmac_reset(void)
 {
 	u32 val = 0;
+	u32 eth_rst_bit = RALINK_ETH_RST;
+
+#if defined(CONFIG_SOC_MT7620)
+	if (dev_raether) {
+		struct END_DEVICE *ei_local = netdev_priv(dev_raether);
+		if (ei_local->chip_name == MT7620_FE)
+			eth_rst_bit = (1 << 23);
+	}
+#endif
 
 	val = sys_reg_read(RSTCTRL);
-	val |= RALINK_ETH_RST;
+	val |= eth_rst_bit;
 	sys_reg_write(RSTCTRL, val);
 	udelay(10);
 
-	val &= ~(RALINK_ETH_RST);
+	val &= ~(eth_rst_bit);
 	sys_reg_write(RSTCTRL, val);
 	udelay(1000);
 }
@@ -754,7 +775,8 @@ static int __init ei_init(struct net_device *dev)
 	/* init  my IP */
 	strncpy(ei_local->lan_ip4_addr, FE_DEFAULT_LAN_IP, IP4_ADDR_LEN);
 
-	if (ei_local->chip_name == MT7621_FE) {
+	if (ei_local->chip_name == MT7621_FE ||
+	    ei_local->chip_name == MT7620_FE) {
 		fe_gmac_reset();
 		fe_sw_init();
 	}
@@ -1890,6 +1912,12 @@ static int fe_int_enable(struct net_device *dev)
 			pr_err("fail to request irq\n");
 
 		mii_mgr_write(31, 0x7008, 0x1f);
+	} else if (ei_local->chip_name == MT7620_FE) {
+		if (request_threaded_irq(ei_local->esw_irq, gsw_interrupt, NULL, 0,
+					 "gsw", NULL))
+			pr_err("fail to request irq\n");
+
+		mii_mgr_write(31, 0x7008, 0x1f);
 	}
 
 	if (ei_local->architecture & RAETH_ESW) {
@@ -2043,7 +2071,7 @@ static int fe_int_disable(struct net_device *dev)
 		free_irq(ei_local->irq2, dev);
 	}
 
-	if (ei_local->architecture & RAETH_ESW || ei_local->chip_name == MT7621_FE)
+	if (ei_local->architecture & RAETH_ESW || ei_local->chip_name == MT7621_FE || ei_local->chip_name == MT7620_FE)
 		free_irq(ei_local->esw_irq, dev);
 
 	if (ei_local->features & (FE_RSS_4RING | FE_RSS_2RING))
@@ -2340,6 +2368,10 @@ static int ei_clock_enable(struct END_DEVICE *ei_local)
 	void __iomem *clk_virt_base;
 	unsigned int reg_value;
 
+	/* MT7620 clocks are managed by platform code, not common clock framework */
+	if (ei_local->chip_name == MT7620_FE)
+		return 0;
+
 	pm_runtime_enable(ei_local->dev);
 	pm_runtime_get_sync(ei_local->dev);
 
@@ -2395,6 +2427,9 @@ static int ei_clock_enable(struct END_DEVICE *ei_local)
 
 static int ei_clock_disable(struct END_DEVICE *ei_local)
 {
+	if (ei_local->chip_name == MT7620_FE)
+		return 0;
+
 	if (ei_local->chip_name == LEOPARD_FE)
 		clk_disable_unprepare(ei_local->clks[MTK_CLK_FE]);
 	if (ei_local->architecture & RAETH_ESW)
@@ -2548,7 +2583,8 @@ int ei_open(struct net_device *dev)
 	if (err)
 		return err;
 
-	if (ei_local->chip_name != MT7621_FE) {
+	if (ei_local->chip_name != MT7621_FE &&
+	    ei_local->chip_name != MT7620_FE) {
 		fe_gmac_reset();
 		fe_sw_init();
 	}
@@ -2995,6 +3031,9 @@ void fe_chip_name_config(struct END_DEVICE *ei_local, struct platform_device *pd
 	} else if (!strcasecmp(pm, "mediatek,mt7623-eth")) {
 		ei_local->chip_name = MT7623_FE;
 		pr_info("CHIP_ID = MT7623\n");
+	} else if (!strcasecmp(pm, "ralink,mt7620-eth")) {
+		ei_local->chip_name = MT7620_FE;
+		pr_info("CHIP_ID = MT7620\n");
 	} else if (!strcasecmp(pm, "mediatek,leopard-eth")) {
 		ei_local->chip_name = LEOPARD_FE;
 		pr_info("CHIP_ID = LEOPARD_FE\n");
@@ -3248,10 +3287,14 @@ static int rather_probe(struct platform_device *pdev)
 		return PTR_ERR(ethdma_frame_engine_base);
 	}
 
-	ethdma_mac_base = ioremap(0x1b110000, 0x300);
+	if (ei_local->chip_name == MT7620_FE)
+		ethdma_mac_base = ioremap(0x10110000, 0x300);
+	else
+		ethdma_mac_base = ioremap(0x1b110000, 0x300);
 
 	/* get clock ctrl */
-	if (ei_local->chip_name != MT7621_FE) {
+	if (ei_local->chip_name != MT7621_FE &&
+	    ei_local->chip_name != MT7620_FE) {
 		for (i = 0; i < ARRAY_SIZE(ei_local->clks); i++) {
 			ei_local->clks[i] = devm_clk_get(&pdev->dev,
 							 mtk_clks_source_name[i]);
@@ -3274,7 +3317,8 @@ static int rather_probe(struct platform_device *pdev)
 
 	/* get IRQs */
 	ei_local->irq0 = platform_get_irq(pdev, 0);
-	if (ei_local->chip_name != MT7621_FE) {
+	if (ei_local->chip_name != MT7621_FE &&
+	    ei_local->chip_name != MT7620_FE) {
 		ei_local->irq1 = platform_get_irq(pdev, 1);
 		ei_local->irq2 = platform_get_irq(pdev, 2);
 	}
@@ -3287,7 +3331,8 @@ static int rather_probe(struct platform_device *pdev)
 		else if (ei_local->architecture & LEOPARD_EPHY)
 			ei_local->esw_irq = platform_get_irq(pdev, 4);
 		pr_info("ei_local->esw_irq = %d\n", ei_local->esw_irq);
-	} else if (ei_local->chip_name == MT7621_FE) {
+	} else if (ei_local->chip_name == MT7621_FE ||
+		   ei_local->chip_name == MT7620_FE) {
 		ei_local->esw_irq = platform_get_irq(pdev, 1);
 	}
 
@@ -3377,6 +3422,7 @@ static const struct of_device_id raether_of_ids[] = {
 	{.compatible = "mediatek,mt7623-eth"},
 	{.compatible = "mediatek,mt7622-raeth"},
 	{.compatible = "mediatek,mt7621-eth"},
+	{.compatible = "ralink,mt7620-eth"},
 	{.compatible = "mediatek,leopard-eth"},
 	{},
 };
