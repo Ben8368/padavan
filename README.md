@@ -2,7 +2,7 @@
 
 基于 [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) 精简并定制的路由器固件项目，专门针对 **小米路由器迷你 (MI-MINI)** 进行 MT7620 平台移植。使用 Linux 4.4.198 内核，参考 rt-n56u 的 MT7620 支持完成驱动适配与硬件 NAT 兼容性修改。
 
-> 本项目是一个 **AI 驱动的嵌入式固件开发实践**，使用 Claude Code + Claude Opus 4.7 全程参与内核移植、驱动调试、构建修复和 CI/CD 自动化，43 个 commit 均在 AI 深度协作下完成。
+> 本项目是一个 **AI 驱动的嵌入式固件开发实践**，使用 Claude Code 搭配多个 AI 模型（Claude Opus 4.7、Xiaomi MiMo-v2.5 Pro、DeepSeek-V4 Pro）全程参与内核移植、驱动调试、构建修复和 CI/CD 自动化，43 个 commit 均在 AI 深度协作下完成。
 
 ---
 
@@ -13,7 +13,7 @@
 | **目标设备** | 小米路由器迷你 (MI-MINI)，MT7620 SoC，128MB RAM |
 | **内核版本** | Linux 4.4.198，MIPS32r2 架构 (mipsel) |
 | **WiFi** | 双频：2.4G (MT7620 内置) + 5G 802.11ac (MT7612E PCIe) |
-| **开发方式** | AI 驱动开发 (Claude Code + Claude Opus 4.7)，43 个 commit 全程 AI 参与 |
+| **开发方式** | AI 驱动开发 (Claude Code + MiMo-v2.5 Pro + DeepSeek-V4 Pro)，43 个 commit 全程 AI 参与 |
 | **构建系统** | Makefile + Shell 脚本，GitHub Actions CI/CD 自动化 |
 | **许可证** | GPLv2 |
 
@@ -218,8 +218,10 @@ fakeroot ./build_firmware_modify MI-MINI
 |------|------|------|
 | [Claude Code](https://claude.ai/code) | Claude Opus 4.7 | 内核源码分析、驱动移植方案设计、复杂 bug 根因排查 |
 | [Claude Code](https://claude.ai/code) | Claude Sonnet 4.6 | 日常代码修改、构建脚本调试、文档生成 |
+| [Claude Code](https://claude.ai/code) | [Xiaomi MiMo-v2.5 Pro](https://mimo.xiaomi.com) | 代码审查、方案讨论、嵌入式开发问题咨询 |
+| [Claude Code](https://claude.ai/code) | DeepSeek-V4 Pro | 代码生成、技术文档撰写、交叉验证实现方案 |
 
-Claude Code 是 Anthropic 官方的 AI 编程助手，支持文件读写、Shell 执行、Agent 子任务并行、网页搜索等工具，能够直接操作代码仓库完成完整的开发工作流。
+多模型协作的工作流：Claude Opus 负责核心架构设计和疑难排查，MiMo-v2.5 Pro 负责代码审查和技术方案讨论，DeepSeek-V4 Pro 负责代码生成和交叉验证，各模型优势互补，提升开发效率和代码质量。
 
 ### AI 在各开发阶段的具体贡献
 
@@ -270,7 +272,7 @@ AI 搭建完整的 GitHub Actions 工作流：
 
 ### Commit 中的 AI 签名
 
-本项目的 commit message 中包含 `Co-Authored-By: Claude Opus 4.7` 签名，标识 AI 参与的贡献。项目文档和代码注释中也标注了 AI 辅助开发的说明。
+本项目的 commit message 中包含 `Co-Authored-By` 签名，标识 AI 参与的贡献。项目文档和代码注释中也标注了 AI 辅助开发的说明。
 
 ---
 
@@ -327,8 +329,9 @@ AI 搭建完整的 GitHub Actions 工作流：
 
 - [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) — 上游项目
 - [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) — MT7620 平台支持来源
-- [Xiaomi MiMo](https://mimo.xiaomi.com) — 小米 AI 模型开放平台
-- [Claude Code](https://claude.ai/code) — Anthropic AI 编程助手
+- [Xiaomi MiMo](https://mimo.xiaomi.com) — 小米 AI 模型开放平台 (MiMo-v2.5 Pro)
+- [DeepSeek](https://www.deepseek.com) — DeepSeek-V4 Pro 模型
+- [Claude Code](https://claude.ai/code) — Anthropic AI 编程助手 (Claude Opus 4.7)
 
 ## 许可证
 
