@@ -121,6 +121,7 @@ static void wait_loop(void)
 		read_data = sys_reg_read(RALINK_ETH_SW_BASE + 0x108);
 }
 
+#if 0
 static void trgmii_calibration_7623(void)
 {
 	/* minimum delay for all correct */
@@ -321,7 +322,9 @@ static void trgmii_calibration_7623(void)
 	read_data &= 0x3fffffff;
 	mii_mgr_write(0x1F, 0x7A40, read_data);
 }
+#endif
 
+#if 0
 static void trgmii_calibration_7530(void)
 {
 	struct END_DEVICE *ei_local = netdev_priv(dev_raether);
@@ -566,6 +569,7 @@ static void trgmii_calibration_7530(void)
 	else
 		reg_bit_zero(TRGMII_7623_base + 0x40, 30, 2);
 }
+#endif
 
 #if 0
 static void mt7530_trgmii_clock_setting(u32 xtal_mode)
@@ -812,6 +816,7 @@ static void lan_wan_partition(void)
 }
 #endif
 
+#if 0
 static void mt7530_phy_setting(void)
 {
 	u32 i;
@@ -839,6 +844,7 @@ static void mt7530_phy_setting(void)
 		mii_mgr_write_cl45(i, 0x1e, 0xa6, 0x300);
 	}
 }
+#endif
 
 #if 0
 static void setup_internal_gsw(void)
