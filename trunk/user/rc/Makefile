@@ -23,6 +23,10 @@ ifeq ($(STORAGE_ENABLED),y)
 CFLAGS += -I$(USERDIR)/libdisk
 LDFLAGS += -L$(USERDIR)/libdisk -ldisk
 endif
+ifdef CONFIG_USB_SUPPORT
+CFLAGS += -I$(USERDIR)/libdisk
+LDFLAGS += -L$(USERDIR)/libdisk -ldisk
+endif
 
 EXEC = rc
 

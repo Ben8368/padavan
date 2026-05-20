@@ -26,7 +26,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 #include <usb_info.h>
 #include <disk_initial.h>
 #endif
@@ -50,7 +50,7 @@ static int dl_status_lan = 0;
 static int dl_status_lan_old = 0;
 static int dl_status_wisp = 0;
 static int dl_status_wisp_old = 0;
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 static int dl_status_usb = 0;
 static int dl_status_usb_old = 0;
 #endif
@@ -138,7 +138,7 @@ dl_handle_link_wan(void)
 			notify_on_wan_ether_link_restored();
 	}
 
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 	if ((dl_counter_modem_check > 0) && (dl_counter_total >= dl_counter_modem_check)) {
 		dl_counter_modem_check = 0;
 		
@@ -179,7 +179,7 @@ dl_handle_link_wisp(void)
 	}
 }
 
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 static void
 dl_handle_link_usb(int force_update)
 {
@@ -246,7 +246,7 @@ dl_on_timer(void)
 	}
 
 	dl_handle_link_lan();
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 	dl_handle_link_usb(0);
 #endif
 }
@@ -290,7 +290,7 @@ dl_update_leds(void)
 		dl_state = (dl_status_wan | dl_status_lan);
 	LED_CONTROL(LED_LAN, (dl_state) ? LED_ON : LED_OFF);
 
-#if defined (USE_STORAGE)
+#if defined (USE_USB_SUPPORT)
 	front_led_x = nvram_get_int("front_led_usb");
 	if (front_led_x == 3 && !(search_gpio_led() & LED_USB2)) {
 		LED_CONTROL(LED_USB, LED_OFF);
