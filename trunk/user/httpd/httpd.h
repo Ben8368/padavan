@@ -112,7 +112,7 @@ struct ej_handler {
 extern struct ej_handler ej_handlers[];
 
 // aidisk.c
-#if defined (USE_USB_SUPPORT)
+#if defined (USE_STORAGE)
 extern int ej_get_usb_ports_info(int eid, webs_t wp, int argc, char **argv);
 #endif
 #if defined (USE_STORAGE)
