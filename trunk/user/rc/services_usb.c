@@ -78,11 +78,15 @@ safe_remove_usb_device(int port, const char *dev_name)
 				}
 			}
 		} else {
+#if defined (USE_STORAGE)
 			safe_remove_stor_device(port, port, dev_name, 1);
+#endif
 		}
-		
+
 	} else if (port == 0) {
+#if defined (USE_STORAGE)
 		safe_remove_stor_device(1, BOARD_NUM_USB_PORTS, NULL, 1);
+#endif
 	}
 }
 
