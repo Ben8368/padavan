@@ -27,11 +27,13 @@
 #ifndef __RTMP_RBUS_H__
 #define __RTMP_RBUS_H__
 
+#include <asm/mach-ralink/mt7620.h>
+
 /*************************************************************************
   *
   *	Device hardware/ Interface related definitions.
   *
-  ************************************************************************/  
+  ************************************************************************/
 
 #define RTMP_MAC_IRQ_NUM		SURFBOARDINT_WLAN
 
