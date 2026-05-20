@@ -211,6 +211,9 @@ struct bf_info_blk1 {
 #elif defined(CONFIG_MACH_MT7623) || defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 	uint32_t vpm:1;		/* 0:ethertype remark, 1:0x8100(CR default) */
 	uint32_t ps:1;		/* packet sampling */
+#elif defined(CONFIG_RALINK_MT7620)
+	uint32_t dvp:1;		/* inform switch of keeping VPRI */
+	uint32_t drm:1;		/* inform switch of keeping DSCP(IPv4) or TC(IPv6) */
 #else
 	uint32_t dvp:1;		/* inform switch of keeping VPRI */
 	uint32_t drm:1;		/* inform switch of keeping DSCP(IPv4) or TC(IPv6) */
@@ -247,6 +250,18 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 	uint32_t port_mg:6;	/* port meter group */
 	uint32_t port_ag:6;	/* port account group */
 #endif
+	uint32_t dscp:8;	/* DSCP value */
+#elif defined(CONFIG_RALINK_MT7620)
+	/* MT7620: same bit positions as MT7621 but different hardware names.
+	 * HNAT_V2 code uses fqos/dp; MT7620 HW calls them fp/up.
+	 * qid[3:0] = force port index (MT7620: fpidx).
+	 */
+	uint32_t qid:4;		/* force port index (MT7620: fpidx) */
+	uint32_t fqos:1;	/* force port enable (MT7620: fp) */
+	uint32_t dp:3;		/* user priority (MT7620: up) */
+	uint32_t fdq:4;		/* force DRAM queue */
+	uint32_t port_mg:6;	/* port meter group */
+	uint32_t port_ag:6;	/* port account group */
 	uint32_t dscp:8;	/* DSCP value */
 #else
 	uint32_t fpidx:4;	/* force port index */

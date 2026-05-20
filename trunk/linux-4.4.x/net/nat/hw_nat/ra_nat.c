@@ -2059,8 +2059,13 @@ static void ppe_set_infoblk2(struct _info_blk2 *iblk2, uint32_t fpidx, uint32_t 
 #ifdef FORCE_UP_TEST
 	u32 reg;
 
+#if defined(CONFIG_RALINK_MT7620)
+	iblk2->fqos = 1;
+	iblk2->dp = 7;
+#else
 	iblk2->fp = 1;
 	iblk2->up = 7;
+#endif
 
 	/* Replace 802.1Q priority by user priority */
 	reg = reg_read(RALINK_ETH_SW_BASE + 0x2704);
@@ -2084,7 +2089,7 @@ defined(CONFIG_ARCH_MT7622) || defined(CONFIG_ARCH_MT7623)
 /* 0:PSE,1:GSW, 2:GMAC,4:PPE,5:QDMA,7=DROP */
 	    iblk2->dp = fpidx;
 #elif defined(CONFIG_RALINK_MT7620)
-	iblk2->fpidx = fpidx;
+	iblk2->qid = fpidx;
 #endif
 
 #if !defined(CONFIG_RAETH_QDMA)
@@ -2767,8 +2772,13 @@ void ppe_set_entry_bind(struct sk_buff *skb, struct foe_entry *entry)
 
 #if defined(CONFIG_RA_HW_NAT_ACL2UP_HELPER)
 	/*set user priority */
+#if defined(CONFIG_RALINK_MT7620)
+	entry->ipv4_hnapt.iblk2.dp = FOE_SP(skb);
+	entry->ipv4_hnapt.iblk2.fqos = 1;
+#else
 	entry->ipv4_hnapt.iblk2.up = FOE_SP(skb);
 	entry->ipv4_hnapt.iblk2.fp = 1;
+#endif
 #endif
 
 #if defined(CONFIG_RA_HW_NAT_PACKET_SAMPLING)
