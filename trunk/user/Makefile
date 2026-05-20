@@ -35,6 +35,7 @@ dir_y						+= iproute2
 dir_y						+= wireless_tools
 dir_y						+= shared
 dir_y						+= nvram
+dir_y						+= libdisk
 dir_y						+= httpd
 dir_y						+= www
 dir_y						+= rc
@@ -46,7 +47,6 @@ dir_y						+= wpa_supplicant
 dir_y						+= pppd
 dir_y						+= pppoe
 dir_y						+= scripts
-dir_y						+= libdisk
 dir_y						+= util-linux
 
 all:
