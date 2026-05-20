@@ -1041,6 +1041,7 @@ void fe_do_reset(void)
 	spin_unlock_irqrestore(&ei_local->page_lock, flags);
 }
 
+#if 0 /* unused MT7623-specific functions */
 /* MT7623 PSE reset workaround to poll if PSE hang */
 static int fe_reset_thread(void *data)
 {
@@ -1127,6 +1128,7 @@ static int phy_polling_thread(void *data)
 	pr_info("%s leaved\n", __func__);
 	return 0;
 }
+#endif
 
 static irqreturn_t ei_interrupt_napi_rx_only(int irq, void *dev_id)
 {

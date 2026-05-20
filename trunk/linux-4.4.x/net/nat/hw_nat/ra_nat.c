@@ -3892,7 +3892,7 @@ defined(CONFIG_MT7610_AP_MESH)
 }
 
 #if defined(CONFIG_RALINK_MT7620)
-static void set_acl_fwd(u16 TP, uint8_t WORD_OFFSET, uint16_t BIT_CMP, uint16_t CMP_PAT,
+static void set_acl_fwd_rule(u16 TP, uint8_t WORD_OFFSET, uint16_t BIT_CMP, uint16_t CMP_PAT,
 			uint8_t INDEX)
 {
 	unsigned int i, value;
@@ -4044,23 +4044,23 @@ static void set_acl_fwd(uint32_t ebl)
 		 wan_int->dev_addr[5]);
 
 	mac_pattern = (lan_int->dev_addr[0] << 8) | lan_int->dev_addr[1];
-	set_acl_fwd(0, 0, 0xffff, mac_pattern, 0);
+	set_acl_fwd_rule(0, 0, 0xffff, mac_pattern, 0);
 	mac_pattern = (lan_int->dev_addr[2] << 8) | lan_int->dev_addr[3];
-	set_acl_fwd(0, 1, 0xffff, mac_pattern, 1);
+	set_acl_fwd_rule(0, 1, 0xffff, mac_pattern, 1);
 	mac_pattern = (lan_int->dev_addr[4] << 8) | lan_int->dev_addr[5];
-	set_acl_fwd(0, 2, 0xffff, mac_pattern, 2);
-	set_acl_fwd(0, 0, 0x0300, 0x0100, 3);
+	set_acl_fwd_rule(0, 2, 0xffff, mac_pattern, 2);
+	set_acl_fwd_rule(0, 0, 0x0300, 0x0100, 3);
 	mac_pattern = (wan_int->dev_addr[0] << 8) | wan_int->dev_addr[1];
-	set_acl_fwd(0, 0, 0xffff, mac_pattern, 4);
+	set_acl_fwd_rule(0, 0, 0xffff, mac_pattern, 4);
 	mac_pattern = (wan_int->dev_addr[2] << 8) | wan_int->dev_addr[3];
-	set_acl_fwd(0, 1, 0xffff, mac_pattern, 5);
+	set_acl_fwd_rule(0, 1, 0xffff, mac_pattern, 5);
 	mac_pattern = (wan_int->dev_addr[4] << 8) | wan_int->dev_addr[5];
-	set_acl_fwd(0, 2, 0xffff, mac_pattern, 6);
+	set_acl_fwd_rule(0, 2, 0xffff, mac_pattern, 6);
 
-	set_acl_fwd(2, 1, 0xfffc, 0x0048, 8);
-	set_acl_fwd(2, 1, 0x0, 0x0, 9);
-	set_acl_fwd(3, 2, 0xfffc, 0x0020, 10);
-	set_acl_fwd(3, 2, 0x0, 0x0, 11);
+	set_acl_fwd_rule(2, 1, 0xfffc, 0x0048, 8);
+	set_acl_fwd_rule(2, 1, 0x0, 0x0, 9);
+	set_acl_fwd_rule(3, 2, 0xfffc, 0x0020, 10);
+	set_acl_fwd_rule(3, 2, 0x0, 0x0, 11);
 
 	set_acl_control(0x107, 0, 0x4080);
 	set_acl_control(0x207, 1, 0x8080);

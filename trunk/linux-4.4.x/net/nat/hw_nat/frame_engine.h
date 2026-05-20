@@ -72,6 +72,9 @@ extern struct net_device                *dev_raether;
 #if defined (CONFIG_HNAT_V2)
 
 #define PFC		    (RALINK_ETH_SW_BASE + 0x0004)
+#define REG_ESW_VLAN_VTCR   0x90
+#define REG_ESW_VLAN_VAWD1  0x94
+#define REG_ESW_VLAN_VAWD2  0x98
 #define TPF0		    (RALINK_ETH_SW_BASE + 0x2030)
 #define TPF1		    (RALINK_ETH_SW_BASE + 0x2130)
 #define TPF2		    (RALINK_ETH_SW_BASE + 0x2230)
