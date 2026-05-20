@@ -215,22 +215,43 @@ fakeroot ./build_firmware_modify MI-MINI
 
 ## 更新日志
 
-### 2026-05-20: 修复 USB-only 构建的链接错误
+以下记录了从上游 [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) fork 后，针对小米路由器迷你 (MI-MINI, MT7620) 所做的全部修改。
 
-**问题**: MI-MINI 配置启用 USB 但未启用存储 (无 `CONFIG_MMC_BLOCK` / `CONFIG_BLK_DEV_SD`) 时，构建失败：
-- `dev_info.h: No such file or directory` — libdisk 头文件路径未包含
-- `cannot find -ldisk` — libdisk 库在 rc 链接时尚未构建
-- `undefined reference to 'safe_remove_stor_device'` — 存储函数在 USB-only 构建中未定义
+### 项目精简
 
-**修复** (3 个 commit):
+- 移除所有非 MI-MINI 设备的板级支持
+- 精简固件组件：移除 VPN (OpenVPN/WireGuard/Shadowsocks)、SSH、Samba、vsftpd、NFS、minidlna、transmission、aria2、校园网认证、IPsec 等
+- 仅保留核心路由功能，适配 MI-MINI 的 128MB RAM + 16MB Flash
 
-| Commit | 修改内容 |
-|--------|---------|
-| `43b2178` | `rc/Makefile`: 添加 `-I$(USERDIR)/libdisk` 给 `CONFIG_USB_SUPPORT` 构建；`hotplug_usb.c` / `detect_link.c`: 条件守卫改回 `USE_USB_SUPPORT` |
-| `c296042` | `user/Makefile`: 将 `libdisk` 移到 `rc` 之前构建，确保 `libdisk.so` 在链接时已存在 |
-| `e0d40bc` | `services_usb.c`: 用 `#if defined (USE_STORAGE)` 守卫 `safe_remove_stor_device()` 调用 |
+### 内核移植 (MT7620 平台)
 
-**根本原因**: `USE_USB_SUPPORT` 和 `USE_STORAGE` 是两个独立的宏，分别在 `BOARD_NUM_USB_PORTS != 0` 和 `STORAGE_ENABLED=y` 时定义。USB 相关代码依赖 libdisk 的头文件和库，但构建系统之前只在存储启用时才配置这些路径。
+| 阶段 | 内容 | 关键 commit |
+|------|------|------------|
+| Phase 1-2 | MT7620 SoC 基础支持，设备树 (DTS) 适配 | `9993e7a` |
+| Phase 3 | USB PHY DTS 节点，USB 控制器初始化 | `16289df` |
+| Phase 4 | MT7620 内置 2.4G WiFi 驱动适配 | `9f39a60` |
+| Phase 5 | MT7612E 5GHz WiFi + PCIe 总线支持 | `ef74460` |
+| Phase 6 | HNAT (硬件 NAT) 兼容性适配 | `d612bd0` |
+
+### 内核 / 驱动修复
+
+- **hw_nat**: 为 MT7620 定义 `RALINK_MT7620` Kconfig 符号，修复 HNAT_V2 结构体定义 (`d8ecc4b`, `06780f4`)
+- **hw_nat**: 禁用 MT7621+ 专属的 `DFL_TTL0_DRP`，添加 MT7620 的 `CAH_RDATA` (`9672540`, `ae43b42`)
+- **raeth**: 清理 `ra_switch.c` 和 `ra_dbg_proc.c` 中未使用的函数和变量 (`bb8a571`, `8c3845d`, `c084e36`)
+- **mt76x2 驱动**: 定义 `CONFIG_RT_*_CARD_EEPROM`，硬编码 EEPROM 模式为 flash (`30534f4`, `8547024`)
+- **mt76x2 驱动**: 添加 `SURFBOARDINT_WLAN` 定义，补充缺失符号的 stub 实现 (`2ad105c`, `1308bcb`)
+- **mt76x2 驱动**: 包含 `mt7620.h` 获取 `SURFBOARDINT_WLAN` 定义 (`a191516`)
+
+### 用户态 / 构建系统修复
+
+- **httpd**: 修正 `ej_get_usb_ports_info` 声明和 stub 的条件编译宏，统一为 `USE_STORAGE` (`6de03a2`, `23995f7`)
+- **rc (2026-05-20)**: 修复 USB-only 构建的链接错误 — 添加 libdisk include 路径给 `CONFIG_USB_SUPPORT`，调整构建顺序使 `libdisk` 在 `rc` 之前编译，守卫 `safe_remove_stor_device()` 调用 (`43b2178`, `c296042`, `e0d40bc`)
+  - 根本原因：`USE_USB_SUPPORT` 和 `USE_STORAGE` 是两个独立宏，USB 代码依赖 libdisk 但构建系统之前只在存储启用时配置路径
+
+### CI/CD
+
+- 添加 GitHub Actions 工作流，自动构建 MI-MINI 固件 (Ubuntu 22.04, 120min 超时, 工具链缓存) (`84dee98`)
+- 构建失败时在 CI 输出中显示错误信息 (`adc6b9b`)
 
 ---
 
