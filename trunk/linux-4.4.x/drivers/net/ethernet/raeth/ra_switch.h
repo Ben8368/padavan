@@ -34,11 +34,7 @@ extern struct net_device *dev_raether;
 #define TX_AMP_OFFSET_VALID_BITS	6
 #define FE_CAL_P0			0
 #define FE_CAL_P1			1
-#if defined(CONFIG_MACH_LEOPARD)
-#define FE_CAL_COMMON			1
-#else
 #define FE_CAL_COMMON			0
-#endif
 
 void fe_sw_init(void);
 void fe_sw_preinit(struct END_DEVICE *ei_local);

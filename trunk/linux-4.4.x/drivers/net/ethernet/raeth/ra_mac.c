@@ -30,7 +30,7 @@ void enable_auto_negotiate(struct END_DEVICE *ei_local)
 		reg_value |= ((mac_to_gigaphy_mode_addr2 - 1) & 0x1f);
 		/* setup PHY address for auto polling (End Addr). */
 		reg_value |= (mac_to_gigaphy_mode_addr2 << 8);
-	} else if (ei_local->architecture & (GE1_RGMII_AN | GE1_SGMII_AN | LEOPARD_EPHY)) {
+	} else if (ei_local->architecture & (GE1_RGMII_AN | GE1_SGMII_AN)) {
 		/* setup PHY address for auto polling (Start Addr). */
 		reg_value |= (mac_to_gigaphy_mode_addr << 0);
 		/* setup PHY address for auto polling (End Addr). */

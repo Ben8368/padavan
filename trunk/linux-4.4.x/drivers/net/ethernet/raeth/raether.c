@@ -74,7 +74,6 @@ static void fe_reset(void)
 	u32 fe_rst_bit = RALINK_FE_RST;
 	u32 ppe_rst_bit = RALINK_PPE_RST;
 
-#if defined(CONFIG_SOC_MT7620)
 	if (dev_raether) {
 		struct END_DEVICE *ei_local = netdev_priv(dev_raether);
 		if (ei_local->chip_name == MT7620_FE) {
@@ -82,7 +81,6 @@ static void fe_reset(void)
 			ppe_rst_bit = 0;
 		}
 	}
-#endif
 
 	val = sys_reg_read(RSTCTRL);
 	val = val | fe_rst_bit | ppe_rst_bit;
@@ -99,13 +97,11 @@ static void fe_gmac_reset(void)
 	u32 val = 0;
 	u32 eth_rst_bit = RALINK_ETH_RST;
 
-#if defined(CONFIG_SOC_MT7620)
 	if (dev_raether) {
 		struct END_DEVICE *ei_local = netdev_priv(dev_raether);
 		if (ei_local->chip_name == MT7620_FE)
 			eth_rst_bit = (1 << 23);
 	}
-#endif
 
 	val = sys_reg_read(RSTCTRL);
 	val |= eth_rst_bit;
@@ -775,8 +771,7 @@ static int __init ei_init(struct net_device *dev)
 	/* init  my IP */
 	strncpy(ei_local->lan_ip4_addr, FE_DEFAULT_LAN_IP, IP4_ADDR_LEN);
 
-	if (ei_local->chip_name == MT7621_FE ||
-	    ei_local->chip_name == MT7620_FE) {
+	if (ei_local->chip_name == MT7620_FE) {
 		fe_gmac_reset();
 		fe_sw_init();
 	}
@@ -1798,10 +1793,7 @@ static void ei_receive_workq(struct work_struct *work)
 static int fe_int_enable(struct net_device *dev)
 {
 	struct END_DEVICE *ei_local = netdev_priv(dev);
-	struct device_node *np = ei_local->switch_np;
-	struct platform_device *pdev = of_find_device_by_node(np);
 	int err0 = 0, err1 = 0, err2 = 0, err3 = 0;
-	struct mtk_gsw *gsw;
 	unsigned int reg_val = 0;
 	unsigned long flags;
 
@@ -1898,21 +1890,7 @@ static int fe_int_enable(struct net_device *dev)
 	if (err0 | err1 | err2 | err3)
 		return (err0 | err1 | err2 | err3);
 
-	if (ei_local->chip_name == MT7623_FE) {
-		gsw = platform_get_drvdata(pdev);
-		if (request_threaded_irq(gsw->irq, gsw_interrupt, NULL, 0,
-					 "gsw", NULL))
-			pr_err("fail to request irq\n");
-
-		/* enable switch link change intr */
-		mii_mgr_write(31, 0x7008, 0x1f);
-	} else if (ei_local->chip_name == MT7621_FE) {
-		if (request_threaded_irq(ei_local->esw_irq, gsw_interrupt, NULL, 0,
-					 "gsw", NULL))
-			pr_err("fail to request irq\n");
-
-		mii_mgr_write(31, 0x7008, 0x1f);
-	} else if (ei_local->chip_name == MT7620_FE) {
+	if (ei_local->chip_name == MT7620_FE) {
 		if (request_threaded_irq(ei_local->esw_irq, gsw_interrupt, NULL, 0,
 					 "gsw", NULL))
 			pr_err("fail to request irq\n");
@@ -1968,13 +1946,6 @@ static int fe_int_enable(struct net_device *dev)
 		} else {
 			sys_reg_write(QFE_INT_ENABLE, QFE_INT_ALL);
 		}
-	}
-
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		if (ei_local->architecture & GE1_SGMII_AN)
-			sys_reg_write(FE_INT_ENABLE2, MAC1_LINK);
-		else if (ei_local->architecture & GE2_SGMII_AN)
-			sys_reg_write(FE_INT_ENABLE2, MAC2_LINK);
 	}
 
 	/* IRQ separation settings */
@@ -2071,7 +2042,7 @@ static int fe_int_disable(struct net_device *dev)
 		free_irq(ei_local->irq2, dev);
 	}
 
-	if (ei_local->architecture & RAETH_ESW || ei_local->chip_name == MT7621_FE || ei_local->chip_name == MT7620_FE)
+	if (ei_local->architecture & RAETH_ESW || ei_local->chip_name == MT7620_FE)
 		free_irq(ei_local->esw_irq, dev);
 
 	if (ei_local->features & (FE_RSS_4RING | FE_RSS_2RING))
@@ -2363,64 +2334,9 @@ static int ei_change_mtu(struct net_device *dev, int new_mtu)
 
 static int ei_clock_enable(struct END_DEVICE *ei_local)
 {
-	unsigned long rate;
-	int ret;
-	void __iomem *clk_virt_base;
-	unsigned int reg_value;
-
 	/* MT7620 clocks are managed by platform code, not common clock framework */
 	if (ei_local->chip_name == MT7620_FE)
 		return 0;
-
-	pm_runtime_enable(ei_local->dev);
-	pm_runtime_get_sync(ei_local->dev);
-
-	clk_prepare_enable(ei_local->clks[MTK_CLK_ETH1PLL]);
-	clk_prepare_enable(ei_local->clks[MTK_CLK_ETH2PLL]);
-	clk_prepare_enable(ei_local->clks[MTK_CLK_ETHIF]);
-	clk_prepare_enable(ei_local->clks[MTK_CLK_ESW]);
-	clk_prepare_enable(ei_local->clks[MTK_CLK_GP1]);
-	clk_prepare_enable(ei_local->clks[MTK_CLK_GP2]);
-	/*enable frame engine clock*/
-	if (ei_local->chip_name == LEOPARD_FE)
-		clk_prepare_enable(ei_local->clks[MTK_CLK_FE]);
-
-	if (ei_local->architecture & RAETH_ESW)
-		clk_prepare_enable(ei_local->clks[MTK_CLK_GP0]);
-
-	if (ei_local->architecture &
-	    (GE1_TRGMII_FORCE_2000 | GE1_TRGMII_FORCE_2600)) {
-		ret = clk_set_rate(ei_local->clks[MTK_CLK_TRGPLL], 500000000);
-		if (ret)
-			pr_err("Failed to set mt7530 trgmii pll: %d\n", ret);
-		rate = clk_get_rate(ei_local->clks[MTK_CLK_TRGPLL]);
-		pr_info("TRGMII_PLL rate = %ld\n", rate);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_TRGPLL]);
-	}
-
-	if (ei_local->architecture & RAETH_SGMII) {
-		if (ei_local->chip_name == LEOPARD_FE)
-			clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII_TOP]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMIPLL]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII_TX250M]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII_RX250M]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII_CDR_REF]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII_CDR_FB]);
-	}
-
-	if (ei_local->architecture & GE2_RAETH_SGMII) {
-		clk_virt_base = ioremap(0x102100C0, 0x10);
-		reg_value = sys_reg_read(clk_virt_base);
-		reg_value = reg_value & (~0x8000);	/*[bit15] = 0 */
-		/*pdn_sgmii_re_1 1: Enable clock off */
-		sys_reg_write(clk_virt_base, reg_value);
-		iounmap(clk_virt_base);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMIPLL]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII1_TX250M]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII1_RX250M]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII1_CDR_REF]);
-		clk_prepare_enable(ei_local->clks[MTK_CLK_SGMII1_CDR_FB]);
-	}
 
 	return 0;
 }
@@ -2429,33 +2345,6 @@ static int ei_clock_disable(struct END_DEVICE *ei_local)
 {
 	if (ei_local->chip_name == MT7620_FE)
 		return 0;
-
-	if (ei_local->chip_name == LEOPARD_FE)
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_FE]);
-	if (ei_local->architecture & RAETH_ESW)
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_GP0]);
-
-	if (ei_local->architecture &
-	    (GE1_TRGMII_FORCE_2000 | GE1_TRGMII_FORCE_2600))
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_TRGPLL]);
-
-	if (ei_local->architecture & RAETH_SGMII) {
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_SGMII_TX250M]);
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_SGMII_RX250M]);
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_SGMII_CDR_REF]);
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_SGMII_CDR_FB]);
-		clk_disable_unprepare(ei_local->clks[MTK_CLK_SGMIPLL]);
-	}
-
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_GP2]);
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_GP1]);
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_ESW]);
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_ETHIF]);
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_ETH2PLL]);
-	clk_disable_unprepare(ei_local->clks[MTK_CLK_ETH1PLL]);
-
-	pm_runtime_put_sync(ei_local->dev);
-	pm_runtime_disable(ei_local->dev);
 
 	return 0;
 }
@@ -2583,16 +2472,6 @@ int ei_open(struct net_device *dev)
 	if (err)
 		return err;
 
-	if (ei_local->chip_name != MT7621_FE &&
-	    ei_local->chip_name != MT7620_FE) {
-		fe_gmac_reset();
-		fe_sw_init();
-	}
-
-	/* initialize fe and switch register */
-	if (ei_local->chip_name == MT7622_FE)
-		fe_sw_preinit(ei_local);
-
 	if (ei_local->features & FE_SW_LRO)
 		fe_set_sw_lro_my_ip(ei_local->lan_ip4_addr);
 
@@ -2601,41 +2480,12 @@ int ei_open(struct net_device *dev)
 #endif
 	forward_config(dev);
 
-	if ((ei_local->chip_name == MT7623_FE) &&
-	    (ei_local->features & FE_HW_LRO)) {
-		ei_local->kreset_task =
-		    kthread_create(fe_reset_thread, NULL, "FE_reset_kthread");
-		if (IS_ERR(ei_local->kreset_task))
-			return PTR_ERR(ei_local->kreset_task);
-		wake_up_process(ei_local->kreset_task);
-	}
-
 	netif_start_queue(dev);
 
 	fe_int_enable(dev);
 
 	/*set hw my mac address*/
 	set_mac_address(dev->dev_addr);
-	if (ei_local->chip_name == LEOPARD_FE) {
-		/*phy led enable*/
-		mii_mgr_write_cl45(0, 0x1f, 0x21, 0x8008);
-		mii_mgr_write_cl45(0, 0x1f, 0x24, 0x8007);
-		mii_mgr_write_cl45(0, 0x1f, 0x25, 0x3f);
-		if ((ei_local->architecture & GE2_RGMII_AN)) {
-			mii_mgr_write(0, 9, 0x200);
-			mii_mgr_write(0, 0, 0x1340);
-			if (mac_to_gigaphy_mode_addr2 == 0) {
-				ei_local->kphy_poll_task =
-				    kthread_create(phy_polling_thread, NULL, "phy_polling_kthread");
-				if (IS_ERR(ei_local->kphy_poll_task))
-					return PTR_ERR(ei_local->kphy_poll_task);
-				wake_up_process(ei_local->kphy_poll_task);
-			}
-		} else if (ei_local->architecture & LEOPARD_EPHY_GMII) {
-			mii_mgr_write(0, 9, 0x200);
-			mii_mgr_write(0, 0, 0x1340);
-		}
-	}
 	return 0;
 }
 
@@ -2644,15 +2494,6 @@ int ei_close(struct net_device *dev)
 	struct END_DEVICE *ei_local = netdev_priv(dev);
 
 	fe_reset();
-
-	if ((ei_local->chip_name == MT7623_FE) &&
-	    (ei_local->features & FE_HW_LRO))
-		kthread_stop(ei_local->kreset_task);
-
-	if (ei_local->chip_name == LEOPARD_FE) {
-		if (ei_local->architecture & GE2_RGMII_AN)
-			kthread_stop(ei_local->kphy_poll_task);
-	}
 
 	netif_stop_queue(dev);
 	ra2880stop(ei_local);
@@ -2663,9 +2504,6 @@ int ei_close(struct net_device *dev)
 		virtualif_close(ei_local->pseudo_dev);
 
 	ei_deinit_dma(dev);
-
-	if (ei_local->chip_name == MT7622_FE)
-		fe_sw_deinit(ei_local);
 
 	module_put(THIS_MODULE);
 
@@ -3017,29 +2855,8 @@ void ei_ioc_setting(struct platform_device *pdev, struct END_DEVICE *ei_local)
 
 void fe_chip_name_config(struct END_DEVICE *ei_local, struct platform_device *pdev)
 {
-	const char *pm;
-	int ret;
-
-	ret = of_property_read_string(pdev->dev.of_node, "compatible", &pm);
-
-	if (!ret && !strcasecmp(pm, "mediatek,mt7621-eth")) {
-		ei_local->chip_name = MT7621_FE;
-		pr_info("CHIP_ID = MT7621\n");
-	} else if (!strcasecmp(pm, "mediatek,mt7622-raeth")) {
-		ei_local->chip_name = MT7622_FE;
-		pr_info("CHIP_ID = MT7622\n");
-	} else if (!strcasecmp(pm, "mediatek,mt7623-eth")) {
-		ei_local->chip_name = MT7623_FE;
-		pr_info("CHIP_ID = MT7623\n");
-	} else if (!strcasecmp(pm, "ralink,mt7620-eth")) {
-		ei_local->chip_name = MT7620_FE;
-		pr_info("CHIP_ID = MT7620\n");
-	} else if (!strcasecmp(pm, "mediatek,leopard-eth")) {
-		ei_local->chip_name = LEOPARD_FE;
-		pr_info("CHIP_ID = LEOPARD_FE\n");
-	} else {
-		pr_info("CHIP_ID error\n");
-	}
+	ei_local->chip_name = MT7620_FE;
+	pr_info("CHIP_ID = MT7620\n");
 }
 
 void raeth_set_wol(bool enable)
@@ -3125,14 +2942,6 @@ void raeth_arch_setting(struct END_DEVICE *ei_local, struct platform_device *pde
 	} else if (!strcasecmp(pm, "esw")) {
 		pr_info("Embedded 5-Port Switch\n");
 		ei_local->architecture |= RAETH_ESW;
-		if (ei_local->chip_name == MT7622_FE) {
-			ei_local->architecture |= MT7622_EPHY;
-		} else if (ei_local->chip_name == LEOPARD_FE) {
-			ret = of_property_read_string(pdev->dev.of_node, "gmac0", &pm);
-			if (!ret && !strcasecmp(pm, "gmii"))
-				ei_local->architecture |= LEOPARD_EPHY_GMII;
-			ei_local->architecture |= LEOPARD_EPHY;
-		}
 	} else if (!strcasecmp(pm, "none")) {
 		pr_info("GE1_RGMII_NONE\n");
 		ei_local->architecture |= GE1_RGMII_NONE;
@@ -3153,10 +2962,6 @@ void raeth_arch_setting(struct END_DEVICE *ei_local, struct platform_device *pde
 			pr_info("GE2_SGMII_FORCE_2500\n");
 			ei_local->architecture |= GE2_SGMII_FORCE_2500;
 			ret = of_property_read_string(pdev->dev.of_node, "gmac2-force", &pm);
-			if (!ret && !strcasecmp(pm, "sgmii-switch")) {
-				ei_local->architecture |= SGMII_SWITCH;
-				pr_info("GE2_SGMII_FORCE LINK SWITCH\n");
-			}
 		} else if (!strcasecmp(pm, "an")) {
 			pr_info("GE2_SGMII_AN\n");
 			ei_local->architecture |= GE2_SGMII_AN;
@@ -3232,7 +3037,6 @@ static int rather_probe(struct platform_device *pdev)
 	struct device_node *node;
 	const char *mac_addr;
 	int ret;
-	int i;
 
 	netdev = alloc_etherdev_mqs(sizeof(struct END_DEVICE),
 				    1, 1);
@@ -3287,24 +3091,7 @@ static int rather_probe(struct platform_device *pdev)
 		return PTR_ERR(ethdma_frame_engine_base);
 	}
 
-	if (ei_local->chip_name == MT7620_FE)
-		ethdma_mac_base = ioremap(0x10110000, 0x300);
-	else
-		ethdma_mac_base = ioremap(0x1b110000, 0x300);
-
-	/* get clock ctrl */
-	if (ei_local->chip_name != MT7621_FE &&
-	    ei_local->chip_name != MT7620_FE) {
-		for (i = 0; i < ARRAY_SIZE(ei_local->clks); i++) {
-			ei_local->clks[i] = devm_clk_get(&pdev->dev,
-							 mtk_clks_source_name[i]);
-			if (IS_ERR(ei_local->clks[i])) {
-				if (PTR_ERR(ei_local->clks[i]) == -EPROBE_DEFER)
-					pr_info("!!!!!EPROBE_DEFER!!!!!\n");
-				pr_info("!!!!ENODEV!!!!! clks = %s\n", mtk_clks_source_name[i]);
-			}
-		}
-	}
+	ethdma_mac_base = ioremap(0x10110000, 0x300);
 
 	/* get gsw device node */
 	ei_local->switch_np = of_parse_phandle(pdev->dev.of_node,
@@ -3317,29 +3104,13 @@ static int rather_probe(struct platform_device *pdev)
 
 	/* get IRQs */
 	ei_local->irq0 = platform_get_irq(pdev, 0);
-	if (ei_local->chip_name != MT7621_FE &&
-	    ei_local->chip_name != MT7620_FE) {
-		ei_local->irq1 = platform_get_irq(pdev, 1);
-		ei_local->irq2 = platform_get_irq(pdev, 2);
-	}
-	if (ei_local->features & (FE_RSS_4RING | FE_RSS_2RING)) {
-		ei_local->irq3 = platform_get_irq(pdev, 3);
-	}
 	if (ei_local->architecture & RAETH_ESW) {
-		if (ei_local->architecture & MT7622_EPHY)
-			ei_local->esw_irq = platform_get_irq(pdev, 3);
-		else if (ei_local->architecture & LEOPARD_EPHY)
-			ei_local->esw_irq = platform_get_irq(pdev, 4);
 		pr_info("ei_local->esw_irq = %d\n", ei_local->esw_irq);
-	} else if (ei_local->chip_name == MT7621_FE ||
-		   ei_local->chip_name == MT7620_FE) {
+	} else if (ei_local->chip_name == MT7620_FE) {
 		ei_local->esw_irq = platform_get_irq(pdev, 1);
 	}
 
 	ei_clock_enable(ei_local);
-
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE)
-		ei_ioc_setting(pdev, ei_local);
 
 	raeth_setup_dev_fptable(netdev);
 	ei_mac_addr_setting(netdev);
@@ -3419,11 +3190,7 @@ static const struct dev_pm_ops raeth_pm_ops = {
 static const char raeth_string[] = "RAETH_DRV";
 
 static const struct of_device_id raether_of_ids[] = {
-	{.compatible = "mediatek,mt7623-eth"},
-	{.compatible = "mediatek,mt7622-raeth"},
-	{.compatible = "mediatek,mt7621-eth"},
 	{.compatible = "ralink,mt7620-eth"},
-	{.compatible = "mediatek,leopard-eth"},
 	{},
 };
 

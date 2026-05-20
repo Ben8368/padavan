@@ -102,11 +102,7 @@
 #define REG_ESW_VLAN_VAWD1		0x94
 #define REG_ESW_VLAN_VAWD2		0x98
 
-#if defined(CONFIG_MACH_MT7623)
-#define REG_ESW_VLAN_ID_BASE		0x100
-#else
 #define REG_ESW_VLAN_ID_BASE          0x50
-#endif
 #define REG_ESW_VLAN_MEMB_BASE		0x70
 #define REG_ESW_TABLE_SEARCH		0x24
 #define REG_ESW_TABLE_STATUS0		0x28
@@ -116,11 +112,7 @@
 #define REG_ESW_WT_MAC_AD1		0x38
 #define REG_ESW_WT_MAC_AD2		0x3C
 
-#if defined(CONFIG_MACH_MT7623)
-#define REG_ESW_MAX         0xFC
-#else
 #define REG_ESW_MAX			0x16C
-#endif
 #define REG_HQOS_MAX			0x3FFF
 
 struct esw_reg {

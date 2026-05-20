@@ -597,9 +597,6 @@ static int tx_ring_open(struct inode *inode, struct file *file)
 	if (!(ei_local->features & FE_QDMA)) {
 		return single_open(file, tx_ring_read, NULL);
 	} else if (ei_local->features & FE_QDMA) {
-		if (ei_local->chip_name == MT7622_FE)
-			return single_open(file, qdma_read_64queue, NULL);
-		else
 			return single_open(file, qdma_read, NULL);
 	} else {
 		return 0;
@@ -1372,8 +1369,6 @@ int esw_cnt_read(struct seq_file *seq, void *v)
 
 	seq_puts(seq, "\n");
 
-	if ((ei_local->chip_name == MT7623_FE) || ei_local->chip_name == MT7621_FE)
-		internal_gsw_cnt_read(seq);
 	if (ei_local->architecture & (GE1_SGMII_FORCE_2500 | GE2_SGMII_FORCE_2500))
 		external_gsw_cnt_read();
 	else if (ei_local->architecture & RAETH_ESW)
@@ -1837,13 +1832,6 @@ int debug_proc_init(void)
 	if (!proc_esw_cnt)
 		pr_debug("!! FAIL to create %s PROC !!\n", PROCREG_ESW_CNT);
 
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		proc_eth_cnt =
-			proc_create(PROCREG_ETH_CNT, 0, proc_reg_dir, &eth_count_fops);
-		if (!proc_eth_cnt)
-			pr_debug("!! FAIL to create %s PROC !!\n", PROCREG_ETH_CNT);
-	}
-
 	if (ei_local->features & TASKLET_WORKQUEUE_SW) {
 		proc_sche =
 		    proc_create(PROCREG_SCHE, 0, proc_reg_dir,
@@ -1924,11 +1912,6 @@ void debug_proc_exit(void)
 
 	if (proc_esw_cnt)
 		remove_proc_entry(PROCREG_ESW_CNT, proc_reg_dir);
-
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		if (proc_eth_cnt)
-			remove_proc_entry(PROCREG_ETH_CNT, proc_reg_dir);
-	}
 
 	/* if (proc_reg_dir) */
 	/* remove_proc_entry(PROCREG_DIR, 0); */

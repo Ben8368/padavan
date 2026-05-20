@@ -11,16 +11,8 @@
 
 #include <asm/addrspace.h>
 
-#ifdef CONFIG_SOC_RT288X
-#define EARLY_UART_BASE		0x300c00
-#define CHIPID_BASE		0x300004
-#elif defined(CONFIG_SOC_MT7621)
-#define EARLY_UART_BASE		0x1E000c00
-#define CHIPID_BASE		0x1E000004
-#else
 #define EARLY_UART_BASE		0x10000c00
 #define CHIPID_BASE		0x10000004
-#endif
 
 #define MT7628_CHIP_NAME1	0x20203832
 
@@ -45,8 +37,7 @@ static inline u32 uart_r32(unsigned reg)
 
 static inline int soc_is_mt7628(void)
 {
-	return IS_ENABLED(CONFIG_SOC_MT7620) &&
-		(__raw_readl(chipid_membase) == MT7628_CHIP_NAME1);
+	return (__raw_readl(chipid_membase) == MT7628_CHIP_NAME1);
 }
 
 static void find_uart_base(void)
@@ -75,7 +66,7 @@ void prom_putchar(unsigned char ch)
 		init_complete = 1;
 	}
 
-	if (IS_ENABLED(CONFIG_SOC_MT7621) || soc_is_mt7628()) {
+	if (soc_is_mt7628()) {
 		uart_w32(ch, UART_TX);
 		while ((uart_r32(UART_REG_LSR) & UART_LSR_THRE) == 0)
 			;

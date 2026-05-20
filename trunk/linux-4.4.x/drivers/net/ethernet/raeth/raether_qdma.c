@@ -205,44 +205,7 @@ bool qdma_tx_desc_alloc(void)
 	sys_reg_write(QTX_CRX_PTR, get_phy_addr(ei_local, txd_idx));
 	sys_reg_write(QTX_DRX_PTR, get_phy_addr(ei_local, txd_idx));
 
-	/*Reserve 4 TXD for each physical queue */
-	if (ei_local->chip_name == MT7623_FE || ei_local->chip_name == MT7621_FE ||
-	    ei_local->chip_name == LEOPARD_FE) {
-		for (i = 0; i < NUM_PQ; i++)
-			sys_reg_write(QTX_CFG_0 + QUEUE_OFFSET * i,
-				      (NUM_PQ_RESV | (NUM_PQ_RESV << 8)));
-	}
-
 	sys_reg_write(QTX_SCH_1, 0x80000000);
-	if (ei_local->chip_name == MT7622_FE) {
-		for (i = 0; i < NUM_PQ; i++) {
-			if (i <= 15) {
-				sys_reg_write(QDMA_PAGE, 0);
-				sys_reg_write(QTX_CFG_0 + QUEUE_OFFSET * i,
-					      (NUM_PQ_RESV |
-					       (NUM_PQ_RESV << 8)));
-			} else if (i > 15 && i <= 31) {
-				sys_reg_write(QDMA_PAGE, 1);
-				sys_reg_write(QTX_CFG_0 +
-					      QUEUE_OFFSET * (i - 16),
-					      (NUM_PQ_RESV |
-					       (NUM_PQ_RESV << 8)));
-			} else if (i > 31 && i <= 47) {
-				sys_reg_write(QDMA_PAGE, 2);
-				sys_reg_write(QTX_CFG_0 +
-					      QUEUE_OFFSET * (i - 32),
-					      (NUM_PQ_RESV |
-					       (NUM_PQ_RESV << 8)));
-			} else if (i > 47 && i <= 63) {
-				sys_reg_write(QDMA_PAGE, 3);
-				sys_reg_write(QTX_CFG_0 +
-					      QUEUE_OFFSET * (i - 48),
-					      (NUM_PQ_RESV |
-					       (NUM_PQ_RESV << 8)));
-			}
-		}
-		sys_reg_write(QDMA_PAGE, 0);
-	}
 
 	return 1;
 }
@@ -260,15 +223,6 @@ bool sfq_init(struct net_device *dev)
 	struct SFQ_table *sfq2 = NULL;
 	struct SFQ_table *sfq3 = NULL;
 
-	dma_addr_t sfq_phy4;
-	dma_addr_t sfq_phy5;
-	dma_addr_t sfq_phy6;
-	dma_addr_t sfq_phy7;
-	struct SFQ_table *sfq4 = NULL;
-	struct SFQ_table *sfq5 = NULL;
-	struct SFQ_table *sfq6 = NULL;
-	struct SFQ_table *sfq7 = NULL;
-
 	int i = 0;
 
 	reg_val = sys_reg_read(VQTX_GLO);
@@ -276,43 +230,20 @@ bool sfq_init(struct net_device *dev)
 	/* Virtual table extends to 32bytes */
 	sys_reg_write(VQTX_GLO, reg_val);
 	reg_val = sys_reg_read(VQTX_GLO);
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		sys_reg_write(VQTX_NUM,
-			      (VQTX_NUM_0) | (VQTX_NUM_1) | (VQTX_NUM_2) |
-			      (VQTX_NUM_3) | (VQTX_NUM_4) | (VQTX_NUM_5) |
-			      (VQTX_NUM_6) | (VQTX_NUM_7));
-	} else {
-		sys_reg_write(VQTX_NUM,
-			      (VQTX_NUM_0) | (VQTX_NUM_1) | (VQTX_NUM_2) |
-			      (VQTX_NUM_3));
-	}
+	sys_reg_write(VQTX_NUM,
+		      (VQTX_NUM_0) | (VQTX_NUM_1) | (VQTX_NUM_2) |
+		      (VQTX_NUM_3));
 
 	/* 10 s change hash algorithm */
 	sys_reg_write(VQTX_HASH_CFG, 0xF002710);
 
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE)
-		sys_reg_write(VQTX_VLD_CFG, 0xeca86420);
-	else
-		sys_reg_write(VQTX_VLD_CFG, 0xc840);
+	sys_reg_write(VQTX_VLD_CFG, 0xc840);
 	sys_reg_write(VQTX_HASH_SD, 0x0D);
 	sys_reg_write(QDMA_FC_THRES, 0x9b9b4444);
 	sys_reg_write(QDMA_HRED1, 0);
 	sys_reg_write(QDMA_HRED2, 0);
 	sys_reg_write(QDMA_SRED1, 0);
 	sys_reg_write(QDMA_SRED2, 0);
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		sys_reg_write(VQTX_0_3_BIND_QID,
-			      (VQTX_0_BIND_QID) | (VQTX_1_BIND_QID) |
-			      (VQTX_2_BIND_QID) | (VQTX_3_BIND_QID));
-		sys_reg_write(VQTX_4_7_BIND_QID,
-			      (VQTX_4_BIND_QID) | (VQTX_5_BIND_QID) |
-			      (VQTX_6_BIND_QID) | (VQTX_7_BIND_QID));
-		pr_err("VQTX_0_3_BIND_QID =%x\n",
-		       sys_reg_read(VQTX_0_3_BIND_QID));
-		pr_err("VQTX_4_7_BIND_QID =%x\n",
-		       sys_reg_read(VQTX_4_7_BIND_QID));
-	}
-
 	sfq0 = dma_alloc_coherent(&ei_local->qdma_pdev->dev,
 				  VQ_NUM0 * sizeof(struct SFQ_table), &sfq_phy0,
 				  GFP_KERNEL);
@@ -353,50 +284,6 @@ bool sfq_init(struct net_device *dev)
 		pr_err("QDMA SFQ0~3 VQ not available...\n");
 		return 1;
 	}
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		sfq4 =
-		    dma_alloc_coherent(&ei_local->qdma_pdev->dev,
-				       VQ_NUM4 * sizeof(struct SFQ_table),
-				       &sfq_phy4, GFP_KERNEL);
-		memset(sfq4, 0x0, VQ_NUM4 * sizeof(struct SFQ_table));
-		for (i = 0; i < VQ_NUM4; i++) {
-			sfq4[i].sfq_info1.VQHPTR = 0xdeadbeef;
-			sfq4[i].sfq_info2.VQTPTR = 0xdeadbeef;
-		}
-		sfq5 =
-		    dma_alloc_coherent(&ei_local->qdma_pdev->dev,
-				       VQ_NUM5 * sizeof(struct SFQ_table),
-				       &sfq_phy5, GFP_KERNEL);
-		memset(sfq5, 0x0, VQ_NUM5 * sizeof(struct SFQ_table));
-		for (i = 0; i < VQ_NUM5; i++) {
-			sfq5[i].sfq_info1.VQHPTR = 0xdeadbeef;
-			sfq5[i].sfq_info2.VQTPTR = 0xdeadbeef;
-		}
-		sfq6 =
-		    dma_alloc_coherent(&ei_local->qdma_pdev->dev,
-				       VQ_NUM6 * sizeof(struct SFQ_table),
-				       &sfq_phy6, GFP_KERNEL);
-		memset(sfq6, 0x0, VQ_NUM6 * sizeof(struct SFQ_table));
-		for (i = 0; i < VQ_NUM6; i++) {
-			sfq6[i].sfq_info1.VQHPTR = 0xdeadbeef;
-			sfq6[i].sfq_info2.VQTPTR = 0xdeadbeef;
-		}
-		sfq7 =
-		    dma_alloc_coherent(&ei_local->qdma_pdev->dev,
-				       VQ_NUM7 * sizeof(struct SFQ_table),
-				       &sfq_phy7, GFP_KERNEL);
-		memset(sfq7, 0x0, VQ_NUM7 * sizeof(struct SFQ_table));
-		for (i = 0; i < VQ_NUM7; i++) {
-			sfq7[i].sfq_info1.VQHPTR = 0xdeadbeef;
-			sfq7[i].sfq_info2.VQTPTR = 0xdeadbeef;
-		}
-		if (unlikely((!sfq4)) || unlikely((!sfq5)) ||
-		    unlikely((!sfq6)) || unlikely((!sfq7))) {
-			pr_err("QDMA SFQ4~7 VQ not available...\n");
-			return 1;
-		}
-	}
-
 	pr_err("*****sfq_phy0 is 0x%p!!!*******\n", (void *)sfq_phy0);
 	pr_err("*****sfq_phy1 is 0x%p!!!*******\n", (void *)sfq_phy1);
 	pr_err("*****sfq_phy2 is 0x%p!!!*******\n", (void *)sfq_phy2);
@@ -405,28 +292,10 @@ bool sfq_init(struct net_device *dev)
 	pr_err("*****sfq_virt1 is 0x%p!!!*******\n", sfq1);
 	pr_err("*****sfq_virt2 is 0x%p!!!*******\n", sfq2);
 	pr_err("*****sfq_virt3 is 0x%p!!!*******\n", sfq3);
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		pr_err("*****sfq_phy4 is 0x%p!!!*******\n", (void *)sfq_phy4);
-		pr_err("*****sfq_phy5 is 0x%p!!!*******\n", (void *)sfq_phy5);
-		pr_err("*****sfq_phy6 is 0x%p!!!*******\n", (void *)sfq_phy6);
-		pr_err("*****sfq_phy7 is 0x%p!!!*******\n", (void *)sfq_phy7);
-		pr_err("*****sfq_virt4 is 0x%p!!!*******\n", sfq4);
-		pr_err("*****sfq_virt5 is 0x%p!!!*******\n", sfq5);
-		pr_err("*****sfq_virt6 is 0x%p!!!*******\n", sfq6);
-		pr_err("*****sfq_virt7 is 0x%p!!!*******\n", sfq7);
-	}
-
 	sys_reg_write(VQTX_TB_BASE0, (u32)sfq_phy0);
 	sys_reg_write(VQTX_TB_BASE1, (u32)sfq_phy1);
 	sys_reg_write(VQTX_TB_BASE2, (u32)sfq_phy2);
 	sys_reg_write(VQTX_TB_BASE3, (u32)sfq_phy3);
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE) {
-		sys_reg_write(VQTX_TB_BASE4, (u32)sfq_phy4);
-		sys_reg_write(VQTX_TB_BASE5, (u32)sfq_phy5);
-		sys_reg_write(VQTX_TB_BASE6, (u32)sfq_phy6);
-		sys_reg_write(VQTX_TB_BASE7, (u32)sfq_phy7);
-	}
-
 	return 0;
 }
 
@@ -612,8 +481,6 @@ int rt2880_qdma_eth_send(struct END_DEVICE *ei_local, struct net_device *dev,
 	/* cpu_ptr->txd_info1.SDP = VIRT_TO_PHYS(skb->data); */
 	cpu_ptr->txd_info1.SDP = virt_to_phys(skb->data);
 	cpu_ptr->txd_info3.SDL = skb->len;
-	if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE)
-		cpu_ptr->txd_info4.SDL = ((skb->len) >> 14);
 	if (ei_local->features & FE_HW_SFQ) {
 		sfq_parse_layer_info(skb);
 		cpu_ptr->txd_info4.VQID0 = 1;	/* 1:HW hash 0:CPU */
@@ -773,15 +640,11 @@ int rt2880_qdma_eth_send_tso(struct END_DEVICE *ei_local,
 	cpu_ptr->txd_info1.SDP = offset;
 	if (len > MAX_QTXD_LEN) {
 		cpu_ptr->txd_info3.SDL = 0x3FFF;
-		if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE)
-			cpu_ptr->txd_info4.SDL = 0x3;
 		cpu_ptr->txd_info3.LS_bit = 0;
 		len -= MAX_QTXD_LEN;
 		offset += MAX_QTXD_LEN;
 	} else {
 		cpu_ptr->txd_info3.SDL = (len & 0x3FFF);
-		if (ei_local->chip_name == MT7622_FE || ei_local->chip_name == LEOPARD_FE)
-			cpu_ptr->txd_info4.SDL = len >> 14;
 		cpu_ptr->txd_info3.LS_bit = nr_frags ? 0 : 1;
 		len = 0;
 	}
@@ -889,9 +752,6 @@ int rt2880_qdma_eth_send_tso(struct END_DEVICE *ei_local,
 			cpu_ptr->txd_info4.QID = init_qid1;
 			cpu_ptr->txd_info1.SDP = offset;
 			cpu_ptr->txd_info3.SDL = (size & 0x3FFF);
-			if (ei_local->chip_name == MT7622_FE ||
-			    ei_local->chip_name == LEOPARD_FE)
-				cpu_ptr->txd_info4.SDL = size >> 14;
 			if ((nr_frags == 0) && (frag_txd_num == 1))
 				cpu_ptr->txd_info3.LS_bit = 1;
 			else
@@ -952,9 +812,6 @@ int rt2880_qdma_eth_send_tso(struct END_DEVICE *ei_local,
 				       __func__);
 
 			cpu_ptr->txd_info3.SDL = (size & 0x3FFF);
-			if (ei_local->chip_name == MT7622_FE ||
-			    ei_local->chip_name == LEOPARD_FE)
-				cpu_ptr->txd_info4.SDL = size >> 14;
 
 			if ((i == (nr_frags - 1)) && (frag_txd_num == 1))
 				cpu_ptr->txd_info3.LS_bit = 1;
@@ -1384,39 +1241,9 @@ int ei_qdma_ioctl(struct net_device *dev, struct ifreq *ifr,
 			break;
 		}
 
-		if (ei_local->chip_name == MT7622_FE) {	/* harry */
-			unsigned int page = 0;
-
-			/* q16~q31: 0x100 <= data->off < 0x200
-			 * q32~q47: 0x200 <= data->off < 0x300
-			 * q48~q63: 0x300 <= data->off < 0x400
-			 */
-			if (data->off >= 0x100 && data->off < 0x200) {
-				page = 1;
-				data->off = data->off - 0x100;
-			} else if (data->off >= 0x200 && data->off < 0x300) {
-				page = 2;
-				data->off = data->off - 0x200;
-			} else if (data->off >= 0x300 && data->off < 0x400) {
-				page = 3;
-				data->off = data->off - 0x300;
-			} else {
-				page = 0;
-			}
-			/*magic number for ioctl identify CR 0x1b101a14*/
-			if (data->off == 0x777) {
-				page = 0;
-				data->off = 0x214;
-			}
-
-			sys_reg_write(QDMA_PAGE, page);
-			/* pr_debug("page=%d, data->off =%x\n", page, data->off); */
-		}
-
 		data->val = sys_reg_read(QTX_CFG_0 + data->off);
 		pr_info("read reg off:%x val:%x\n", data->off, data->val);
 		ret = copy_to_user(ifr->ifr_data, data, sizeof(*data));
-		sys_reg_write(QDMA_PAGE, 0);
 		if (ret) {
 			pr_info("ret=%d\n", ret);
 			ret = -EFAULT;
@@ -1429,38 +1256,7 @@ int ei_qdma_ioctl(struct net_device *dev, struct ifreq *ifr,
 			break;
 		}
 
-		if (ei_local->chip_name == MT7622_FE) {	/* harry */
-			unsigned int page = 0;
-			/*QoS must enable QDMA drop packet policy*/
-			sys_reg_write(QDMA_FC_THRES, 0x83834444);
-			/* q16~q31: 0x100 <= data->off < 0x200
-			 * q32~q47: 0x200 <= data->off < 0x300
-			 * q48~q63: 0x300 <= data->off < 0x400
-			 */
-			if (data->off >= 0x100 && data->off < 0x200) {
-				page = 1;
-				data->off = data->off - 0x100;
-			} else if (data->off >= 0x200 && data->off < 0x300) {
-				page = 2;
-				data->off = data->off - 0x200;
-			} else if (data->off >= 0x300 && data->off < 0x400) {
-				page = 3;
-				data->off = data->off - 0x300;
-			} else {
-				page = 0;
-			}
-			/*magic number for ioctl identify CR 0x1b101a14*/
-			if (data->off == 0x777) {
-				page = 0;
-				data->off = 0x214;
-			}
-			sys_reg_write(QDMA_PAGE, page);
-			/*pr_info("data->val =%x\n", data->val);*/
-			sys_reg_write(QTX_CFG_0 + data->off, data->val);
-			sys_reg_write(QDMA_PAGE, 0);
-		} else {
-			sys_reg_write(QTX_CFG_0 + data->off, data->val);
-		}
+		sys_reg_write(QTX_CFG_0 + data->off, data->val);
 		/* pr_ino("write reg off:%x val:%x\n", data->off, data->val); */
 		break;
 	case RAETH_QDMA_QUEUE_MAPPING:

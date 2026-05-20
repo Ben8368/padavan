@@ -29,13 +29,8 @@
 
 #define MAX_PACKET_SIZE	1514
 #define	MIN_PACKET_SIZE 60
-#if defined(CONFIG_MACH_MT7623) || defined(CONFIG_SOC_MT7621)
-#define MAX_PTXD_LEN 0x3fff	/* 16k */
-#define MAX_QTXD_LEN 0x3fff	/* 16k */
-#else
 #define MAX_PTXD_LEN 0x3fff	/* 16k */
 #define MAX_QTXD_LEN 0xffff
-#endif
 
 #define phys_to_bus(a) (a)
 
@@ -63,36 +58,16 @@ extern void __iomem *ethdma_frame_engine_base;
 #define SGMII_CONFIG_0	BIT(9) /*SGMII path enable of GMAC1*/
 #define SGMII_CONFIG_1	BIT(8) /*SGMII path enable of GMAC1*/
 
-#if defined(CONFIG_PINCTRL_MT7622)
-#define SGMII_REG_BASE0	(0x1b128000)
-#define SGMII_REG_PHYA_BASE0	(0x1b12a000)
-#define SGMII_REG_BASE1	(0)
-#define SGMII_REG_PHYA_BASE1	(0)
-#elif defined(CONFIG_MACH_LEOPARD)
-#define SGMII_REG_BASE0	(0x1b128000)
-#define SGMII_REG_PHYA_BASE0	(0x1b128100)
-#define SGMII_REG_BASE1	(0x1b130000)
-#define SGMII_REG_PHYA_BASE1	(0x1b130100)
-#else
 #define SGMII_REG_BASE0	(0)
 #define SGMII_REG_PHYA_BASE0	(0)
 #define SGMII_REG_BASE1	(0)
 #define SGMII_REG_PHYA_BASE1	(0)
-#endif
 #define ETHSYS_MAC_BASE	(0x1b110000)
 
-#if defined(CONFIG_MACH_LEOPARD)
-#define FE_RSTCTL   0x1B000034
-#define INFRA_BASE  0x1000070C
-#define GEPHY_CTRL0 0x10000710
-#define GPIO_GO_BASE GEPHY_CTRL0
-#define GPIO_MODE_BASE 0x10217300
-#else
 #define INFRA_BASE  0
 #define FE_RSTCTL   0
 #define GPIO_GO_BASE 0x10211800
 #define GPIO_MODE_BASE 0x10211300
-#endif
 
 /* ETHDMASYS base address
  * for I2S/PCM/GDMA/HSDMA/FE/GMAC
@@ -103,11 +78,7 @@ extern void __iomem *ethdma_frame_engine_base;
 #define ETHDMASYS_SYSCTL_BASE            ETHDMASYS_BASE
 #define ETHDMASYS_PPE_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x0C00)
 #define ETHDMASYS_ETH_MAC_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x10000)
-#if defined(CONFIG_MACH_MT7623) || defined(CONFIG_SOC_MT7621) || defined(CONFIG_SOC_MT7620)
 #define ETHDMASYS_ETH_SW_BASE       (ETHDMASYS_FRAME_ENGINE_BASE + 0x10000)
-#else
-#define ETHDMASYS_ETH_SW_BASE		(ETHDMASYS_FRAME_ENGINE_BASE + 0x18000)
-#endif
 
 #define RALINK_FRAME_ENGINE_BASE	ETHDMASYS_FRAME_ENGINE_BASE
 #define RALINK_PPE_BASE                 ETHDMASYS_PPE_BASE
@@ -740,24 +711,6 @@ struct PSEUDO_ADAPTER {
 #define PQ6	43
 #define PQ7	63
 
-#if defined(CONFIG_MACH_MT7623)
-#define VQ_NUM0	256
-#define VQ_NUM1	256
-#define VQ_NUM2	256
-#define VQ_NUM3	256
-#define VQ_NUM4	0
-#define VQ_NUM5	0
-#define VQ_NUM6	0
-#define VQ_NUM7	0
-#define VQTX_NUM_0  (4 << 0)
-#define VQTX_NUM_1  (4 << 4)
-#define VQTX_NUM_2  (4 << 8)
-#define VQTX_NUM_3  (4 << 12)
-#define VQTX_NUM_4   0
-#define VQTX_NUM_5   0
-#define VQTX_NUM_6   0
-#define VQTX_NUM_7   0
-#else
 #define VQ_NUM0	128
 #define VQ_NUM1	128
 #define VQ_NUM2	128
@@ -774,18 +727,12 @@ struct PSEUDO_ADAPTER {
 #define VQTX_NUM_5  (3 << 20)
 #define VQTX_NUM_6  (3 << 24)
 #define VQTX_NUM_7  (3 << 28)
-#endif
 
 #define VQTX_MIB_EN BIT(17)
 
 /*HW IO-COHERNET BASE address*/
-#if defined(CONFIG_MACH_LEOPARD)
-#define HW_IOC_BASE	0x1B000080
-#define IOC_OFFSET	4
-#else
 #define HW_IOC_BASE	0x1B000400
 #define IOC_OFFSET	8
-#endif
 
 /*=========================================
  *    SFQ Table Format define
@@ -1220,17 +1167,7 @@ struct QDMA_txdesc {
 /* proc definition */
 
 #define PROCREG_CONTROL_FILE      "/var/run/procreg_control"
-#if defined(CONFIG_MACH_MT7623)
-#define PROCREG_DIR             "mt7623"
-#elif defined(CONFIG_MACH_LEOPARD)
-#define PROCREG_DIR             "leopard"
-#elif defined(CONFIG_PINCTRL_MT7622)
-#define PROCREG_DIR             "mt7622"
-#elif defined(CONFIG_SOC_MT7621)
-#define PROCREG_DIR             "mt7621"
-#elif defined(CONFIG_SOC_MT7620)
 #define PROCREG_DIR             "mt7620"
-#endif
 
 #define PROCREG_SKBFREE		"skb_free"
 #define PROCREG_TXRING		"tx_ring"

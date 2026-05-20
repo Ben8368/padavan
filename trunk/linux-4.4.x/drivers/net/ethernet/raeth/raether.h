@@ -66,9 +66,6 @@
 
 #include <linux/dma-mapping.h>
 
-#if defined(CONFIG_MACH_MT7623)
-#include <linux/delay.h>
-#endif
 #include <linux/kthread.h>
 #include <linux/prefetch.h>
 
@@ -101,24 +98,12 @@
 #define TOTAL_TXQ_NUM 2
 #endif
 
-#if defined(CONFIG_MACH_MT7623)
-#define NUM_RX_DESC     2048
-#define NUM_QRX_DESC 16
-#define NUM_PQ_RESV 4
-#define FFA 2048
-#define QUEUE_OFFSET 0x10
-#else
 #define NUM_QRX_DESC 16
 #define NUM_PQ_RESV 4
 #define FFA 512
 #define QUEUE_OFFSET 0x10
-#endif
 
-#if defined(CONFIG_PINCTRL_MT7622)
-#define NUM_PQ 64
-#else
 #define NUM_PQ 16
-#endif
 /* #define NUM_TX_MAX_PROCESS NUM_TX_DESC */
 #define NUM_RX_MAX_PROCESS 16
 
@@ -130,41 +115,23 @@
 #define DEV_NAME        "eth2"
 #define DEV2_NAME       "eth3"
 
-#if defined(CONFIG_MACH_MT7623)
-#define GMAC0_OFFSET    0xE000
-#define GMAC2_OFFSET    0xE006
-#else
 #define GMAC0_OFFSET    0x28
 #define GMAC2_OFFSET    0x22
-#endif
 
-#if defined(CONFIG_MACH_MT7623)
-#define IRQ_ENET0       232
-#define IRQ_ENET1       231
-#define IRQ_ENET2       230
-#else
 /* NOTE(Nelson): prom version started from 20150806 */
 #define IRQ_ENET0       255
 #define IRQ_ENET1       256
 #define IRQ_ENET2       257
-#endif
 #define MTK_NAPI_WEIGHT	64
 
 #define RAETH_VERSION	"STD_v0.1"
 
-/* MT7623 PSE reset workaround */
 #define	FE_RESET_POLLING_MS	(5000)
-
-/*LEOPARD POLLING*/
 #define PHY_POLLING_MS		(1000)
 #define FE_DEFAULT_LAN_IP	"192.168.1.1"
 #define IP4_ADDR_LEN		16
 
-#if defined(CONFIG_SOC_MT7621)
-#define MT_TRIGGER_LOW	0
-#else
 #define MT_TRIGGER_LOW	IRQF_TRIGGER_LOW
-#endif
 
 /* This enum allows us to identify how the clock is defined on the array of the
  * clock in the order
@@ -232,7 +199,6 @@ struct END_DEVICE {
 	/* TSO */
 	unsigned int skb_txd_num;
 
-	/* MT7623 workaround */
 	struct work_struct reset_task;
 
 	/* workqueue_bh */
@@ -330,7 +296,6 @@ struct END_DEVICE {
 			       unsigned long *tx_cpu_owner_idx,
 			       struct sk_buff *skb, int gmac_no);
 
-	/* MT7623 PSE reset workaround */
 	struct task_struct *kreset_task;
 	struct task_struct *kphy_poll_task;
 	unsigned int fe_reset_times;
