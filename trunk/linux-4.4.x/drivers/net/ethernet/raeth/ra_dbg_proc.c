@@ -1100,7 +1100,6 @@ static const struct file_operations lro_stats_fops = {
 };
 
 static struct proc_dir_entry *proc_esw_cnt;
-static struct proc_dir_entry *proc_eth_cnt;
 
 void internal_gsw_cnt_read(struct seq_file *seq)
 {
