@@ -192,6 +192,7 @@ extern struct net_device                *dev_raether;
 #define CAH_TAG_SRH	    (RALINK_PPE_BASE + 0x324)
 #define CAH_LINE_RW	    (RALINK_PPE_BASE + 0x328)
 #define CAH_WDATA	    (RALINK_PPE_BASE + 0x32C)
+#define CAH_RDATA	    (RALINK_PPE_BASE + 0x330)
 #elif defined (CONFIG_RALINK_MT7621) || defined (CONFIG_MACH_MT7623) || \
 defined (CONFIG_ARCH_MT7623) || defined (CONFIG_ARCH_MT7622)
 #if defined (CONFIG_ARCH_MT7622)

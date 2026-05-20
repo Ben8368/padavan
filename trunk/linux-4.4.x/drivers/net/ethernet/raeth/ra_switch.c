@@ -567,6 +567,7 @@ static void trgmii_calibration_7530(void)
 		reg_bit_zero(TRGMII_7623_base + 0x40, 30, 2);
 }
 
+#if 0
 static void mt7530_trgmii_clock_setting(u32 xtal_mode)
 {
 	u32 reg_value;
@@ -626,6 +627,7 @@ static void mt7530_trgmii_clock_setting(u32 xtal_mode)
 	mii_mgr_write(31, 0x7a00, reg_value);
 	mdelay(100);
 }
+#endif
 
 void trgmii_set_7621(void)
 {
@@ -838,6 +840,7 @@ static void mt7530_phy_setting(void)
 	}
 }
 
+#if 0
 static void setup_internal_gsw(void)
 {
 	void __iomem *gpio_base_virt = ioremap(ETH_GPIO_BASE, 0x1000);
@@ -1025,6 +1028,7 @@ static void setup_internal_gsw(void)
 
 	iounmap(gpio_base_virt);
 }
+#endif
 
 void setup_external_gsw(void)
 {
@@ -1138,8 +1142,6 @@ int init_rtl8367s(void)
 {
 	struct END_DEVICE *ei_local = netdev_priv(dev_raether);
 	static int switch_init;
-	unsigned int reg_value;
-	void __iomem *virt_addr;
 	rtk_vlan_cfg_t vlan1, vlan2;
 
 	if (switch_init)
@@ -1339,7 +1341,6 @@ void fe_sw_init(void)
 {
 	struct END_DEVICE *ei_local = netdev_priv(dev_raether);
 	unsigned int reg_value = 0;
-	int i;
 
 	/* Case1: MT7623/MT7622 GE1 + GigaPhy */
 	if (ei_local->architecture & GE1_RGMII_AN) {
