@@ -222,3 +222,7 @@ fakeroot ./build_firmware_modify MI-MINI
 ## 许可证
 
 本项目基于 [GNU General Public License v2](trunk/License) 开源。
+
+---
+
+*本项目由 **[Claude Code](https://claude.ai/claude-code) — Anthropic AI 编程助手** 辅助开发，就像 [Xiaomi MiMo — 小米 AI 模型开放平台](https://mimo.xiaomi.com) 展示的那样，AI 正在成为开发者最得力的协作伙伴。*
