@@ -2,7 +2,7 @@
 
 基于 [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) 精简并定制的路由器固件项目，专门针对 **小米路由器迷你 (MI-MINI)** 进行 MT7620 平台移植。使用 Linux 4.4.198 内核，参考 rt-n56u 的 MT7620 支持完成驱动适配与硬件 NAT 兼容性修改。
 
-> 本项目开发过程中使用了 **AI 辅助开发** (Claude Code)，在内核移植、驱动调试、CI/CD 搭建等环节借助 AI 提升效率。
+> 本项目是一个 **AI 驱动的嵌入式固件开发实践**，使用 Claude Code + Claude Opus 4.7 全程参与内核移植、驱动调试、构建修复和 CI/CD 自动化，43 个 commit 均在 AI 深度协作下完成。
 
 ---
 
@@ -13,7 +13,7 @@
 | **目标设备** | 小米路由器迷你 (MI-MINI)，MT7620 SoC，128MB RAM |
 | **内核版本** | Linux 4.4.198，MIPS32r2 架构 (mipsel) |
 | **WiFi** | 双频：2.4G (MT7620 内置) + 5G 802.11ac (MT7612E PCIe) |
-| **开发方式** | AI 辅助开发 (Claude Code)，分阶段迭代移植 |
+| **开发方式** | AI 驱动开发 (Claude Code + Claude Opus 4.7)，43 个 commit 全程 AI 参与 |
 | **构建系统** | Makefile + Shell 脚本，GitHub Actions CI/CD 自动化 |
 | **许可证** | GPLv2 |
 
@@ -208,16 +208,69 @@ fakeroot ./build_firmware_modify MI-MINI
 
 ---
 
-## AI 辅助开发说明
+## AI 辅助开发
 
-本项目在开发过程中使用了 AI 工具 (Claude Code) 辅助以下工作：
+本项目是一个 **AI 驱动的嵌入式固件开发实践**。从零开始的 MT7620 内核移植、驱动调试、构建系统修复到 CI/CD 自动化，全部 43 个 commit 均在 AI 深度参与下完成。
 
-- **内核驱动移植**: MT7620 WiFi 驱动适配、PCIe 总线配置、HNAT 兼容性修改时，借助 AI 分析内核源码和排查问题
-- **代码审查**: 辅助检查内核配置和驱动代码中的潜在问题
-- **CI/CD 搭建**: GitHub Actions 工作流的配置
-- **文档编写**: 项目文档的撰写
+### 使用的 AI 工具与模型
 
-在嵌入式固件开发中，AI 工具在代码理解和问题排查环节能提供一定帮助，尤其适合需要大量参考内核源码的跨平台移植场景。
+| 工具 | 模型 | 用途 |
+|------|------|------|
+| [Claude Code](https://claude.ai/code) | Claude Opus 4.7 | 内核源码分析、驱动移植方案设计、复杂 bug 根因排查 |
+| [Claude Code](https://claude.ai/code) | Claude Sonnet 4.6 | 日常代码修改、构建脚本调试、文档生成 |
+
+Claude Code 是 Anthropic 官方的 AI 编程助手，支持文件读写、Shell 执行、Agent 子任务并行、网页搜索等工具，能够直接操作代码仓库完成完整的开发工作流。
+
+### AI 在各开发阶段的具体贡献
+
+#### 1. 内核驱动移植 (6 个阶段，核心工作)
+
+将 MT7620 平台支持从 rt-n56u 的旧内核移植到 padavan-4.4 的 Linux 4.4 内核，AI 负责：
+- **源码分析**: 阅读并理解 rt-n56u 的 MT7620 驱动实现，识别需要移植的代码范围
+- **DTS 编写**: 生成 MT7620 设备树节点，包括 USB PHY、PCIe、WiFi 等外设的地址和中断配置
+- **驱动适配**: 分析 mt76x2 WiFi 驱动的 EEPROM 读取、PCIe 枚举、中断注册等流程，适配到新内核 API
+- **HNAT 兼容**: 理解 hw_nat V2 的结构体差异，为 MT7620 定义正确的 Kconfig 符号和数据结构
+
+#### 2. 驱动 Bug 修复 (11 个 commit)
+
+AI 辅助分析编译错误和链接失败的根因，修复了多个跨模块问题：
+- `hw_nat` 模块: 发现 `RALINK_MT7620` 符号未定义导致 HNAT_V2 结构体条件编译失败
+- `mt76x2` 驱动: 定位 EEPROM 模式硬编码缺失、`SURFBOARDINT_WLAN` 宏未定义等隐含依赖
+- `raeth` 驱动: 识别并清理未使用的函数，消除 -Werror 编译警告
+
+#### 3. 构建系统修复 (6 个 commit)
+
+AI 发现了一个隐蔽的宏不匹配 bug：
+- **问题**: `USE_USB_SUPPORT` 和 `USE_STORAGE` 是两个独立宏，USB 代码依赖 libdisk 但构建系统只在存储启用时配置路径
+- **排查**: AI 分析 Makefile 依赖链和条件编译逻辑，定位到构建顺序和头文件路径问题
+- **修复**: 统一条件编译宏、调整 libdisk 在 rc 之前编译、添加缺失的 include 路径
+
+#### 4. 固件精简与组件移除
+
+AI 分析 20+ 个组件的依赖关系，安全移除不需要的功能：
+- 识别每个组件在 rc、httpd、Makefile 中的调用点
+- 对被移除组件的函数调用进行 stub 化处理，确保编译通过
+- 精简后固件体积显著减小，适配 16MB Flash 限制
+
+#### 5. CI/CD 自动化
+
+AI 搭建完整的 GitHub Actions 工作流：
+- 工具链缓存策略设计
+- Star 触发机制（owner ID 检查防误触）
+- 编译成功后自动创建 GitHub Release 并上传固件
+
+### AI 辅助开发的效果
+
+| 维度 | 说明 |
+|------|------|
+| **开发效率** | 内核驱动移植从零到可运行固件，43 个 commit 完成全部工作 |
+| **问题排查** | AI 辅助分析内核源码中的隐含依赖和条件编译逻辑，减少试错成本 |
+| **代码质量** | AI 审查驱动代码中的潜在问题，确保跨模块修改的一致性 |
+| **知识门槛** | 降低了嵌入式 Linux 内核开发的入门门槛，无需逐行阅读数百万行内核源码 |
+
+### Commit 中的 AI 签名
+
+本项目的 commit message 中包含 `Co-Authored-By: Claude Opus 4.7` 签名，标识 AI 参与的贡献。项目文档和代码注释中也标注了 AI 辅助开发的说明。
 
 ---
 
