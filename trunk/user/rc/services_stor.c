@@ -1437,7 +1437,7 @@ try_start_stor_apps(void)
 void
 on_deferred_hotplug_dev(void)
 {
-#if defined (USE_USB_SUPPORT)
+#if defined (USE_STORAGE)
 	int plug_modem = 0;
 	int unplug_modem = 0;
 #endif
@@ -1449,7 +1449,7 @@ on_deferred_hotplug_dev(void)
 		nvram_set_int_temp("usb_opt_start", 0);
 	}
 
-#if defined (USE_USB_SUPPORT)
+#if defined (USE_STORAGE)
 	if (nvram_match("usb_unplug_lp", "1"))
 	{
 		nvram_set_int_temp("usb_unplug_lp", 0);
