@@ -67,12 +67,11 @@
 - **双频 WiFi**: 2.4GHz (802.11n) + 5GHz (802.11ac)，2x2 MIMO
 - **IPv6**: 完整支持 (DHCPv6, SLAAC, NAT66)
 - **Fullcone NAT**: 全锥形 NAT，改善 P2P 连通性
-- **防火墙**: iptables/netfilter + IPSet，支持 IP/MAC/URL 过滤
+- **防火墙**: iptables/netfilter，支持 IP/MAC/URL 过滤
 - **PPPoE**: 宽带拨号上网
 - **DHCP/DNS**: dnsmasq 提供局域网域名解析和地址分配
 - **UPnP**: NAT 穿透，支持游戏和 P2P 应用
-- **IGMP Proxy**: IPTV 组播代理
-- **VLAN**: 支持 IPTV VLAN 划分
+- **VLAN**: 支持 VLAN 划分
 
 ### 管理与监控
 
@@ -197,7 +196,15 @@ fakeroot ./build_firmware_modify MI-MINI
 
 ### CI/CD
 
-项目配置了 GitHub Actions 自动构建，每次推送自动触发固件编译。工作流定义在 `.github/workflows/build.yml`，基于 Ubuntu 22.04 运行，超时时间 120 分钟，支持工具链缓存加速。
+项目配置了 GitHub Actions 自动构建，支持以下触发方式：
+
+| 触发方式 | 说明 |
+|---------|------|
+| **Push/PR** | 推送到 main 分支或提交 PR 时自动编译 |
+| **手动触发** | 在 Actions 页面点击 "Run workflow" |
+| **Star 触发** | 仓库 owner 点击 Star 按钮即可触发编译 |
+
+工作流定义在 `.github/workflows/build.yml`，基于 Ubuntu 22.04 运行，超时时间 120 分钟，支持工具链缓存加速。编译成功后自动创建 GitHub Release 并上传 `.trx` 固件文件。
 
 ---
 
@@ -259,6 +266,7 @@ fakeroot ./build_firmware_modify MI-MINI
 
 - 添加 GitHub Actions 工作流，自动构建 MI-MINI 固件 (Ubuntu 22.04, 120min 超时, 工具链缓存) (`84dee98`)
 - 构建失败时在 CI 输出中显示错误信息 (`adc6b9b`)
+- 新增 Star 触发编译（仅 repo owner 生效）和自动发布 Release（`.trx` 固件上传到 GitHub Release）(`027d8f1`)
 
 ---
 
