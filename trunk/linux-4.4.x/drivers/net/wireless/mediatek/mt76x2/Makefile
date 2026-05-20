@@ -86,6 +86,7 @@ $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/ap/ap_cfg.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/ap_ioctl.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_proc.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_linux.o
+$(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_linux_stubs.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_profile.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_main_dev.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/rt_rbus_pci_drv.o
