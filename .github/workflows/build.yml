@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     timeout-minutes: 120
+    permissions:
+      contents: write
     # Star 触发时，仅 repo owner 的 star 才会触发编译
     if: >-
       github.event_name != 'watch' ||
