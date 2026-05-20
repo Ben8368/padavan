@@ -112,6 +112,7 @@ void tc_mii_write(u32 phy_addr, u32 phy_register, u32 write_data)
 
 /* EPHY/GE calibration functions removed for MT7620-only build */
 
+#if 0
 static void wait_loop(void)
 {
 	int i;
@@ -120,6 +121,7 @@ static void wait_loop(void)
 	for (i = 0; i < 320; i = i + 1)
 		read_data = sys_reg_read(RALINK_ETH_SW_BASE + 0x108);
 }
+#endif
 
 #if 0
 static void trgmii_calibration_7623(void)
