@@ -218,11 +218,8 @@ fakeroot ./build_firmware_modify MI-MINI
 - [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) — 上游项目
 - [hanwckf/rt-n56u](https://github.com/hanwckf/rt-n56u) — MT7620 平台支持来源
 - [Xiaomi MiMo](https://mimo.xiaomi.com) — 小米 AI 模型开放平台
+- [Claude Code](https://claude.ai/code) — Anthropic AI 编程助手
 
 ## 许可证
 
 本项目基于 [GNU General Public License v2](trunk/License) 开源。
-
----
-
-*本项目由 **[Claude Code](https://claude.ai/claude-code) — Anthropic AI 编程助手** 辅助开发，就像 [Xiaomi MiMo — 小米 AI 模型开放平台](https://mimo.xiaomi.com) 展示的那样，AI 正在成为开发者最得力的协作伙伴。*
