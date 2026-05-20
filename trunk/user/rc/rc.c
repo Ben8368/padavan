@@ -492,7 +492,6 @@ flash_firmware(void)
 #if defined (USE_USB_SUPPORT)
 	stop_usb_printer_spoolers();
 #endif
-	stop_igmpproxy(NULL);
 
 	kill_services(svcs, 6, 1);
 

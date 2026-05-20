@@ -305,8 +305,8 @@ config_bridge(int is_ap_mode)
 	if (!is_ap_mode) {
 		igmp_static_port = -1;
 		if (nvram_match("mr_enable_x", "1")) {
-			multicast_router = 2;   // bridge is mcast router path (br0 <--igmpproxy--> eth3)
-			multicast_querier = 0;  // bridge is not needed internal mcast querier (igmpproxy is mcast querier)
+			multicast_router = 2;   // bridge is mcast router path
+			multicast_querier = 0;  // bridge is not needed internal mcast querier
 		} else {
 			multicast_router = 1;   // bridge may be mcast router path
 			multicast_querier = 1;  // bridge is needed internal mcast querier (for eth2-ra0-rai0 snooping work)
@@ -744,7 +744,7 @@ full_restart_lan(void)
 		}
 	}
 
-	/* restart igmpproxy, udpxy, xupnpd */
+	/* restart udpxy, xupnpd */
 	if (!is_wan_err)
 		restart_iptv(is_ap_mode);
 

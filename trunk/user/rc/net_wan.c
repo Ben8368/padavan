@@ -689,7 +689,6 @@ launch_viptv_wan(void)
 		
 		logmessage(LOGNAME, "%s %s (%s)", "IPTV MAN", "up", viptv_ifname);
 		
-		start_igmpproxy(viptv_ifname);
 	} else if (viptv_mode == 1) {
 		start_zcip_viptv(viptv_ifname);
 	} else {
@@ -1071,7 +1070,6 @@ stop_wan(void)
 	char *svcs_wan[] = {
 		"ntpd",
 		"inadyn",
-		"igmpproxy",
 		"xupnpd",
 		"udpxy",
 		"udhcpc",
@@ -1238,8 +1236,6 @@ man_up(char *man_ifname, int unit, int is_static)
 		notify_rc("restart_firewall_wan");
 	}
 
-	/* start multicast router */
-	start_igmpproxy(man_ifname);
 }
 
 void
@@ -1250,8 +1246,6 @@ man_down(char *man_ifname, int unit)
 	/* for update dnsmasq.servers */
 	nvram_set_temp("wanx_domain", "");
 
-	/* stop multicast router */
-	stop_igmpproxy(man_ifname);
 }
 
 void
@@ -1339,10 +1333,6 @@ wan_up(char *wan_ifname, int unit, int is_static)
 			start_auth_kabinet();
 	}
 
-	/* start multicast router (for NDIS or IPoE) */
-	if (ppp_ifindex(wan_ifname) < 0)
-		start_igmpproxy(wan_ifname);
-
 	/* notify DDNS client */
 	notify_ddns_update();
 
@@ -1392,10 +1382,6 @@ wan_down(char *wan_ifname, int unit, int is_static)
 
 	wan_proto = get_wan_proto(unit);
 	modem_unit_id = is_ifunit_modem(wan_ifname, unit);
-
-	/* Stop multicast router (for NDIS or IPoE) */
-	if (ppp_ifindex(wan_ifname) < 0)
-		stop_igmpproxy(wan_ifname);
 
 	/* Stop kabinet authenticator (for IPoE) */
 	if (!modem_unit_id && (wan_proto == IPV4_WAN_PROTO_IPOE_STATIC || wan_proto == IPV4_WAN_PROTO_IPOE_DHCP)) {
@@ -2304,8 +2290,6 @@ udhcpc_viptv_bound(char *man_ifname, int is_renew_mode)
 		/* default route via default gateway (metric 10) */
 		if (is_valid_ipv4(gw))
 			route_add(man_ifname, 10, "0.0.0.0", gw, "0.0.0.0");
-		
-		start_igmpproxy(man_ifname);
 	}
 
 	nvram_set_int_temp(strcat_r(prefix, "err", tmp), i_err);
@@ -2360,8 +2344,6 @@ zcip_viptv_bound(char *man_ifname)
 		ip = trim_r(value);
 		nvram_set_temp(strcat_r(prefix, "ipaddr", tmp), ip);
 		ifconfig(man_ifname, IFUP, ip, zeroconf_mask);
-		
-		start_igmpproxy(man_ifname);
 	}
 
 	return 0;

@@ -379,81 +379,11 @@ start_xupnpd(char *wan_ifname)
 #endif
 
 void
-stop_igmpproxy(char *wan_ifname)
-{
-	char *svcs[] = { "xupnpd", "udpxy", "igmpproxy", NULL };
-
-	/* check used IPTV via VLAN interface */
-	if (wan_ifname) {
-		char *viptv_iflast = nvram_safe_get("viptv_ifname");
-		if (*viptv_iflast && is_interface_exist(viptv_iflast) && strcmp(wan_ifname, viptv_iflast))
-			return;
-	}
-
-	kill_services(svcs, 3, 1);
-}
-
-void
-start_igmpproxy(char *wan_ifname)
-{
-	FILE *fp;
-	char *igmpproxy_conf = "/etc/igmpproxy.conf";
-	char *altnet, *altnet_mask, *viptv_iflast;
-
-	/* check used IPTV via VLAN interface */
-	viptv_iflast = nvram_safe_get("viptv_ifname");
-	if (*viptv_iflast && is_interface_exist(viptv_iflast) && strcmp(wan_ifname, viptv_iflast))
-		return;
-
-	/* Always close old instance of igmpproxy and udpxy (interface may changed) */
-	stop_igmpproxy(wan_ifname);
-
-	start_udpxy(wan_ifname);
-#if defined(APP_XUPNPD)
-	start_xupnpd(wan_ifname);
-#endif
-
-	if (nvram_invmatch("mr_enable_x", "1"))
-		return;
-
-	fp = fopen(igmpproxy_conf, "w");
-	if (fp) {
-		altnet = nvram_get("mr_altnet_x");
-		if (altnet && strlen(altnet) > 6)
-			altnet_mask = altnet;
-		else
-			altnet_mask = "0.0.0.0/0";
-		fprintf(fp, "# automatically generated\n");
-		if (nvram_invmatch("mr_qleave_x", "0"))
-			fprintf(fp, "quickleave\n");
-		fprintf(fp, "\nphyint %s %s  ratelimit 0  threshold 1\n", wan_ifname, "upstream");
-		fprintf(fp, "\taltnet %s\n", altnet_mask);
-		fprintf(fp, "\nphyint %s %s  ratelimit 0  threshold 1\n", IFNAME_BR, "downstream");
-		fprintf(fp, "\n");
-		
-		fclose(fp);
-	}
-
-	eval("/bin/igmpproxy", igmpproxy_conf);
-}
-
-void
 restart_iptv(int is_ap_mode)
 {
 	config_bridge(is_ap_mode);
 
-	if (!is_ap_mode) {
-		char *wan_ifname, *viptv_iflast;
-		
-		/* check used IPTV via VLAN interface */
-		viptv_iflast = nvram_safe_get("viptv_ifname");
-		if (*viptv_iflast && is_interface_exist(viptv_iflast))
-			wan_ifname = viptv_iflast;
-		else
-			wan_ifname = get_man_ifname(0);
-		start_igmpproxy(wan_ifname);
-	} else {
-		stop_igmpproxy(NULL);
+	if (is_ap_mode) {
 		start_udpxy(IFNAME_BR);
 #if defined(APP_XUPNPD)
 		start_xupnpd(IFNAME_BR);

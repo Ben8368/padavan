@@ -30,7 +30,6 @@ dir_  =
 
 dir_y						+= busybox
 dir_y						+= iptables
-dir_y						+= ebtables
 dir_y						+= iproute2
 dir_y						+= wireless_tools
 dir_y						+= shared
@@ -41,7 +40,6 @@ dir_y						+= www
 dir_y						+= rc
 dir_y						+= miniupnpd
 dir_y						+= dnsmasq
-dir_y						+= igmpproxy
 dir_y						+= utils
 dir_y						+= wpa_supplicant
 dir_y						+= pppd

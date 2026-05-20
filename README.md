@@ -34,7 +34,8 @@
 │   net_wan · net_wifi · firewall_ex · services    │
 ├─────────────────────────────────────────────────┤
 │   dnsmasq · iptables · wpa_supplicant · pppd     │
-│   miniupnpd · igmpproxy · iproute2 · ipset       │
+│   miniupnpd · iproute2 · libdisk · nvram         │
+│   shared · utils                                 │
 ├─────────────────────────────────────────────────┤
 │          Linux 4.4.198 (MIPS32r2)                │
 │   MT7620 WiFi · MT7612E PCIe · raeth · HNAT     │
@@ -53,9 +54,9 @@
 |------|---------|---------|
 | Phase 1-2 | MT7620 SoC 基础支持，设备树 (DTS) 适配 | `arch/mips/ralink/`, `dts/` |
 | Phase 3 | USB PHY DTS 节点，USB 控制器初始化 | `drivers/usb/` |
-| Phase 4 | MT7620 内置 2.4G WiFi 驱动适配 | `drivers/net/wireless/mt7620/` |
-| Phase 5 | MT7612E 5GHz WiFi + PCIe 总线支持 | `drivers/net/wireless/mt76x2/`, `drivers/pci/` |
-| Phase 6 | HNAT (硬件 NAT) 兼容性适配 | `drivers/net/ralink/` |
+| Phase 4 | MT7620 内置 2.4G WiFi 驱动适配 | `drivers/net/wireless/mediatek/mt76x2/` |
+| Phase 5 | MT7612E 5GHz WiFi + PCIe 总线支持 | `drivers/net/wireless/mediatek/mt76x2/`, `drivers/pci/` |
+| Phase 6 | HNAT (硬件 NAT) 兼容性适配 | `drivers/net/ethernet/raeth/` |
 
 ---
 
@@ -98,29 +99,28 @@ padavan-4.4/
 │   └── dl_toolchain.sh      #   工具链下载脚本
 ├── trunk/                   # 固件源码主目录
 │   ├── linux-4.4.x/         #   Linux 4.4.198 内核源码
-│   ├── user/                #   用户态程序 (20个组件)
+│   ├── user/                #   用户态程序 (18个组件)
 │   │   ├── rc/              #     init/服务管理器 (核心)
 │   │   ├── httpd/           #     Web 管理后台 (HTTP/HTTPS)
 │   │   ├── www/             #     Web UI (ASP + Bootstrap)
 │   │   ├── dnsmasq/         #     DNS/DHCP 服务器
 │   │   ├── iptables/        #     防火墙 (iptables 1.8.7)
-│   │   ├── ebtables/        #     以太网桥防火墙
 │   │   ├── pppd/ + pppoe/   #     PPP 拨号
 │   │   ├── wpa_supplicant/  #     WiFi 认证 (WPA/WPA2)
 │   │   ├── miniupnpd/       #     UPnP NAT 穿透
-│   │   ├── igmpproxy/       #     IGMP 组播代理
 │   │   ├── iproute2/        #     高级网络工具
-│   │   ├── ipset/           #     IP 集合 (防火墙规则)
 │   │   ├── busybox/         #     核心 Unix 工具
-│   │   ├── shared/          #     共享库 (nvram, netutils, shutils)
+│   │   ├── libdisk/         #     USB 存储设备管理
+│   │   ├── nvram/           #     NVRAM 读写库
+│   │   ├── shared/          #     共享库 (nvram_linux, netutils, shutils)
 │   │   ├── wireless_tools/  #     无线配置工具
-│   │   ├── tcpdump/         #     网络抓包
-│   │   ├── iperf3/          #     带宽测试
+│   │   ├── util-linux/      #     磁盘工具 (libblkid)
+│   │   ├── utils/           #     硬件工具 (cpu_usage, hw_nat, switch)
 │   │   └── scripts/         #     运行时脚本
-│   ├── libs/                #   第三方库 (libz, openssl, libcurl 等)
+│   ├── libs/                #   第三方库 (libz, libssl, libcurl, libevent 等)
 │   ├── libc/                #   uClibc-ng 1.0.38
 │   ├── configs/
-│   │   ├── boards/MI-MINI/  #   硬件定义 (board.h, board.mk, kernel.config)
+│   │   ├── boards/MI-MINI/  #   硬件定义 (board.h, board.mk, kernel-4.4.x.config)
 │   │   └── templates/       #   编译模板
 │   ├── vendors/Ralink/      #   平台构建规则
 │   ├── tools/               #   构建工具 (mksquashfs, mkimage 等)
@@ -146,6 +146,9 @@ padavan-4.4/
 | QoS 调度 | IMQ/IFB 模块 |
 | USB 扩展 | 摄像头/HID/串口/音频模块 |
 | IPsec | XFRM 框架 |
+| 组播代理 | igmpproxy (IPTV 组播) |
+| 以太网桥过滤 | ebtables (访客 AP 隔离) |
+| IP 集合 | ipset (高级 IP 过滤) |
 
 精简后固件体积显著减小，运行时内存占用更低，更适合 MI-MINI 的 128MB RAM + 16MB Flash 硬件条件。
 
@@ -218,7 +221,7 @@ fakeroot ./build_firmware_modify MI-MINI
 ### 项目精简
 
 - 移除所有非 MI-MINI 设备的板级支持
-- 精简固件组件：移除 VPN (OpenVPN/WireGuard/Shadowsocks)、SSH、Samba、vsftpd、NFS、minidlna、transmission、aria2、校园网认证、IPsec 等
+- 精简固件组件：移除 VPN (OpenVPN/WireGuard/Shadowsocks)、SSH、Samba、vsftpd、NFS、minidlna、transmission、aria2、校园网认证、IPsec、igmpPoxy、ebtables、ipset 等
 - 仅保留核心路由功能，适配 MI-MINI 的 128MB RAM + 16MB Flash
 
 ### 内核移植 (MT7620 平台)
@@ -245,6 +248,12 @@ fakeroot ./build_firmware_modify MI-MINI
 - **httpd**: 修正 `ej_get_usb_ports_info` 声明和 stub 的条件编译宏，统一为 `USE_STORAGE` (`6de03a2`, `23995f7`)
 - **rc (2026-05-20)**: 修复 USB-only 构建的链接错误 — 添加 libdisk include 路径给 `CONFIG_USB_SUPPORT`，调整构建顺序使 `libdisk` 在 `rc` 之前编译，守卫 `safe_remove_stor_device()` 调用 (`43b2178`, `c296042`, `e0d40bc`)
   - 根本原因：`USE_USB_SUPPORT` 和 `USE_STORAGE` 是两个独立宏，USB 代码依赖 libdisk 但构建系统之前只在存储启用时配置路径
+
+### 组件精简 (2026-05-20)
+
+- **ipset**: 关闭 `CONFIG_FIRMWARE_INCLUDE_IPSET`，删除源码目录（内核 ipset 模块本已未启用）
+- **ebtables**: 从构建系统移除，stub 化 rc 中的 `ebtables_filter_guest_ap()` 和 `restart_guest_lan_isolation()`，关闭内核 ebtables 模块
+- **igmpproxy**: 从构建系统移除，清理 rc 中所有 igmpproxy 调用（net.c, net_wan.c, rc.c, services.c, net_lan.c），简化 `restart_iptv()`
 
 ### CI/CD
 

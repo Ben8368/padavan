@@ -628,7 +628,6 @@ stop_services(int stopall)
 	stop_rstats();
 	stop_infosvr();
 	stop_crond();
-	stop_igmpproxy(NULL);
 }
 
 void
