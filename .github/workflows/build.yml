@@ -74,12 +74,12 @@ jobs:
           # 从文件名提取版本号，如 MI-MINI_4.4.3.9-100.trx -> v3.9-100
           VERSION=$(echo "$FIRMWARE_FILE" | grep -oP '\d+\.\d+-\d+' | head -1)
           TAG="v${VERSION}-$(date +%Y%m%d)"
-          RELEASE_NAME="MI-MINI 固件 ${VERSION} ($(date +%Y-%m-%d))"
+          RELEASE_NAME="MI-MINI Firmware ${VERSION} ($(date +%Y-%m-%d))"
           echo "Creating release: $TAG"
           echo "Firmware: $FIRMWARE_FILE"
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "$RELEASE_NAME" \
-            --notes "自动编译固件 $FIRMWARE_FILE" \
+            --notes "Auto-built firmware: $FIRMWARE_FILE" \
             --latest \
             "$FIRMWARE_FILE"
