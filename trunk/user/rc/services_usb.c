@@ -243,3 +243,10 @@ try_start_usb_modem_to_wan(void)
 	try_wan_reconnect(1, 0);
 }
 
+#if !defined (USE_STORAGE)
+void
+on_deferred_hotplug_dev(void)
+{
+}
+#endif
+

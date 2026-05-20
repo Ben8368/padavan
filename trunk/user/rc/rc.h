@@ -633,10 +633,11 @@ void umount_stor_path(struct disk_info_t *disks_info, int port, const char *dev_
 void umount_ejected(void);
 void start_stor_apps(void);
 void stop_stor_apps(void);
-void on_deferred_hotplug_dev(void);
 void safe_remove_stor_device(int port_b, int port_e, const char *dev_name, int do_spindown);
 void safe_remove_all_stor_devices(int do_spindown);
 #endif
+
+void on_deferred_hotplug_dev(void);
 
 #if defined (USE_USB_SUPPORT)
 /* services_usb.c */

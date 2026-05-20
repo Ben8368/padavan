@@ -30,7 +30,7 @@
 ├─────────────────────────────────────────────────┤
 │              httpd (HTTP/HTTPS 后端)              │
 ├─────────────────────────────────────────────────┤
-│         rc (init/服务管理器，41个C源文件)          │
+│         rc (init/服务管理器，35个C源文件)          │
 │   net_wan · net_wifi · firewall_ex · services    │
 ├─────────────────────────────────────────────────┤
 │   dnsmasq · iptables · wpa_supplicant · pppd     │
@@ -75,10 +75,8 @@
 
 ### 管理与监控
 
-- **Web 管理界面**: 中英文支持，16 语言 i18n 字典
+- **Web 管理界面**: 中英文支持
 - **实时流量监控**: 实时 / 24小时 / 每日统计
-- **网络测速**: 内置 iperf3
-- **抓包分析**: 内置 tcpdump
 - **Wake-on-LAN**: 远程唤醒局域网设备
 - **固件升级**: Web UI 一键升级
 - **自定义脚本**: post_wan / post_iptables / inet_state / shutdown 钩子
@@ -100,7 +98,7 @@ padavan-4.4/
 │   └── dl_toolchain.sh      #   工具链下载脚本
 ├── trunk/                   # 固件源码主目录
 │   ├── linux-4.4.x/         #   Linux 4.4.198 内核源码
-│   ├── user/                #   用户态程序 (23个组件)
+│   ├── user/                #   用户态程序 (20个组件)
 │   │   ├── rc/              #     init/服务管理器 (核心)
 │   │   ├── httpd/           #     Web 管理后台 (HTTP/HTTPS)
 │   │   ├── www/             #     Web UI (ASP + Bootstrap)
