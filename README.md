@@ -213,6 +213,27 @@ fakeroot ./build_firmware_modify MI-MINI
 
 ---
 
+## 更新日志
+
+### 2026-05-20: 修复 USB-only 构建的链接错误
+
+**问题**: MI-MINI 配置启用 USB 但未启用存储 (无 `CONFIG_MMC_BLOCK` / `CONFIG_BLK_DEV_SD`) 时，构建失败：
+- `dev_info.h: No such file or directory` — libdisk 头文件路径未包含
+- `cannot find -ldisk` — libdisk 库在 rc 链接时尚未构建
+- `undefined reference to 'safe_remove_stor_device'` — 存储函数在 USB-only 构建中未定义
+
+**修复** (3 个 commit):
+
+| Commit | 修改内容 |
+|--------|---------|
+| `43b2178` | `rc/Makefile`: 添加 `-I$(USERDIR)/libdisk` 给 `CONFIG_USB_SUPPORT` 构建；`hotplug_usb.c` / `detect_link.c`: 条件守卫改回 `USE_USB_SUPPORT` |
+| `c296042` | `user/Makefile`: 将 `libdisk` 移到 `rc` 之前构建，确保 `libdisk.so` 在链接时已存在 |
+| `e0d40bc` | `services_usb.c`: 用 `#if defined (USE_STORAGE)` 守卫 `safe_remove_stor_device()` 调用 |
+
+**根本原因**: `USE_USB_SUPPORT` 和 `USE_STORAGE` 是两个独立的宏，分别在 `BOARD_NUM_USB_PORTS != 0` 和 `STORAGE_ENABLED=y` 时定义。USB 相关代码依赖 libdisk 的头文件和库，但构建系统之前只在存储启用时才配置这些路径。
+
+---
+
 ## 相关项目
 
 - [hanwckf/padavan-4.4](https://github.com/hanwckf/padavan-4.4) — 上游项目
