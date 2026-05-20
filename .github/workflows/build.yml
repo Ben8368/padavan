@@ -73,7 +73,7 @@ jobs:
           fi
           # 从文件名提取版本号，如 MI-MINI_4.4.3.9-100.trx -> v3.9-100
           VERSION=$(echo "$FIRMWARE_FILE" | grep -oP '\d+\.\d+-\d+' | head -1)
-          TAG="v${VERSION}-$(date +%Y%m%d)"
+          TAG="v${VERSION}-$(date +%Y%m%d%H%M%S)"
           RELEASE_NAME="MI-MINI Firmware ${VERSION} ($(date +%Y-%m-%d))"
           echo "Creating release: $TAG"
           echo "Firmware: $FIRMWARE_FILE"
