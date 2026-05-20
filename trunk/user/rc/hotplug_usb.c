@@ -27,8 +27,10 @@
 #include <errno.h>
 #include <signal.h>
 
+#if defined (USE_STORAGE)
 #include <dev_info.h>
 #include <usb_info.h>
+#endif
 
 #include "rc.h"
 
