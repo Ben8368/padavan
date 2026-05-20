@@ -200,10 +200,6 @@ func_fill()
 
 	script_start="$dir_storage/start_script.sh"
 	script_started="$dir_storage/started_script.sh"
-	script_shutd="$dir_storage/shutdown_script.sh"
-	script_postf="$dir_storage/post_iptables_script.sh"
-	script_postw="$dir_storage/post_wan_script.sh"
-	script_inets="$dir_storage/inet_state_script.sh"
 	script_vpnsc="$dir_storage/vpns_client_script.sh"
 	script_vpncs="$dir_storage/vpnc_server_script.sh"
 	script_ezbtn="$dir_storage/ez_buttons_script.sh"
@@ -281,65 +277,6 @@ sync && echo 3 > /proc/sys/vm/drop_caches
 
 EOF
 		chmod 755 "$script_started"
-	fi
-
-	# create shutdown script
-	if [ ! -f "$script_shutd" ] ; then
-		cat > "$script_shutd" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called before router shutdown
-### \$1 - action (0: reboot, 1: halt, 2: power-off)
-
-EOF
-		chmod 755 "$script_shutd"
-	fi
-
-	# create post-iptables script
-
-	if [ ! -f "$script_postf" ] ; then
-		cat > "$script_postf" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called after internal iptables reconfig (firewall update)
-
-#wing resume
-
-EOF
-		chmod 755 "$script_postf"
-	fi
-
-	# create post-wan script
-	if [ ! -f "$script_postw" ] ; then
-		cat > "$script_postw" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called after internal WAN up/down action
-### \$1 - WAN action (up/down)
-### \$2 - WAN interface name (e.g. eth3 or ppp0)
-### \$3 - WAN IPv4 address
-
-EOF
-		chmod 755 "$script_postw"
-	fi
-
-	# create inet-state script
-	if [ ! -f "$script_inets" ] ; then
-		cat > "$script_inets" <<EOF
-#!/bin/sh
-
-### Custom user script
-### Called on Internet status changed
-### \$1 - Internet status (0/1)
-### \$2 - elapsed time (s) from previous state
-
-logger -t "di" "Internet state: \$1, elapsed time: \$2s."
-
-EOF
-		chmod 755 "$script_inets"
 	fi
 
 	# create vpn server action script

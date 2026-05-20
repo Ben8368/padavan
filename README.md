@@ -79,7 +79,6 @@
 - **实时流量监控**: 实时 / 24小时 / 每日统计
 - **Wake-on-LAN**: 远程唤醒局域网设备
 - **固件升级**: Web UI 一键升级
-- **自定义脚本**: post_wan / post_iptables / inet_state / shutdown 钩子
 
 ### 硬件加速
 
@@ -283,7 +282,7 @@ AI 搭建完整的 GitHub Actions 工作流：
 ### 项目精简
 
 - 移除所有非 MI-MINI 设备的板级支持
-- 精简固件组件：移除 VPN (OpenVPN/WireGuard/Shadowsocks)、SSH、Samba、vsftpd、NFS、minidlna、transmission、aria2、校园网认证、IPsec、igmpPoxy、ebtables、ipset 等
+- 精简固件组件：移除 VPN (OpenVPN/WireGuard/Shadowsocks)、SSH、Samba、vsftpd、NFS、minidlna、transmission、aria2、校园网认证、IPsec、igmpproxy、ebtables、ipset 等
 - 仅保留核心路由功能，适配 MI-MINI 的 128MB RAM + 16MB Flash
 
 ### 内核移植 (MT7620 平台)

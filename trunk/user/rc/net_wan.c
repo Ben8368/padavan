@@ -1252,7 +1252,6 @@ void
 wan_up(char *wan_ifname, int unit, int is_static)
 {
 	char wan_cnt[32], *wan_addr, *wan_mask, *wan_gate;
-	const char *script_postw = SCRIPT_POST_WAN;
 	int wan_proto, modem_unit_id;
 
 	logmessage(LOGNAME, "%s %s (%s)", "WAN", "up", wan_ifname);
@@ -1353,17 +1352,12 @@ wan_up(char *wan_ifname, int unit, int is_static)
 
 	/* di wakeup after 2 secs */
 	notify_run_detect_internet(2);
-
-	/* call custom user script */
-	if (check_if_file_exist(script_postw))
-		doSystem("%s %s %s %s", script_postw, "up", wan_ifname, wan_addr);
 }
 
 void
 wan_down(char *wan_ifname, int unit, int is_static)
 {
 	char *wan_addr, *wan_gate;
-	const char *script_postw = SCRIPT_POST_WAN;
 	int wan_proto, modem_unit_id;
 
 	logmessage(LOGNAME, "%s %s (%s)", "WAN", "down", wan_ifname);
@@ -1421,9 +1415,6 @@ wan_down(char *wan_ifname, int unit, int is_static)
 	set_wan_unit_value_int(unit, "dltime", 0);
 	set_wan_unit_value_int(unit, "bytes_rx", 0);
 	set_wan_unit_value_int(unit, "bytes_tx", 0);
-
-	if (check_if_file_exist(script_postw))
-		doSystem("%s %s %s %s", script_postw, "down", wan_ifname, wan_addr);
 }
 
 void
@@ -1611,8 +1602,6 @@ notify_on_wan_ether_link_restored(void)
 void
 notify_on_internet_state_changed(int has_internet, long elapsed)
 {
-	const char *script_inet = SCRIPT_INTERNET_STATE;
-
 	if (!has_internet && !get_ap_mode()) {
 		int fail_action = nvram_safe_get_int("di_lost_action", 0, 0, 3);
 		switch (fail_action)
@@ -1634,9 +1623,6 @@ notify_on_internet_state_changed(int has_internet, long elapsed)
 #endif
 		}
 	}
-
-	if (check_if_file_exist(script_inet))
-		doSystem("%s %d %ld", script_inet, has_internet, elapsed);
 }
 
 int

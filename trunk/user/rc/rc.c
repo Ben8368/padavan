@@ -472,7 +472,6 @@ erase_nvram(void)
 static void
 flash_firmware(void)
 {
-	const char *script_name = SCRIPT_SHUTDOWN;
 	char* svcs[] = { "l2tpd",
 			 "xl2tpd",
 			 "pppd",
@@ -482,9 +481,6 @@ flash_firmware(void)
 
 	stop_misc();
 	stop_services(0); // don't stop httpd/telnetd/sshd/vpn
-
-	if (check_if_file_exist(script_name))
-		doSystem("%s %d", script_name, 0);
 
 #if defined (USE_STORAGE)
 	safe_remove_all_stor_devices(0);
@@ -777,15 +773,11 @@ shutdown_router(int level)
 {
 	int use_halt = (level == 1) ? 1 : 0;
 	int is_ap_mode = get_ap_mode();
-	const char *script_name = SCRIPT_SHUTDOWN;
 
 	stop_misc();
 
 	if (level < 2)
 		stop_services(use_halt);
-
-	if (check_if_file_exist(script_name))
-		doSystem("%s %d", script_name, level);
 
 #if defined (USE_STORAGE)
 	safe_remove_all_stor_devices(use_halt);
