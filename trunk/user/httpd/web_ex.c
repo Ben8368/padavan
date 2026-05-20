@@ -3957,7 +3957,7 @@ ej_backup_nvram(int eid, webs_t wp, int argc, char **argv)
 	return 0;
 }
 
-#if !defined (USE_USB_SUPPORT)
+#if !defined (USE_STORAGE)
 static int
 ej_get_usb_ports_info(int eid, webs_t wp, int argc, char **argv)
 {
